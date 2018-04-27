@@ -1,0 +1,5 @@
+A very simple S-expressions parser. Still in development. More documentation
+will follow shortly.
+
+API documentation:
+http://go.pkgdoc.org/github.com/nsf/sexp
