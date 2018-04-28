@@ -1,0 +1,119 @@
+<html>
+<head>
+    <title>KiCad Component Database</title>
+
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="css/material-icons.css">
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/general.css">
+
+    <style type="text/css">
+    /**
+     * Hide when Angular is not yet loaded and initialized
+     */
+    [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+      display: none !important;
+    }
+    </style>
+
+    <!-- JavaScript for: jQuery, angular, materialize, and angular-materialize. All of which are needed. -->
+    <script type="text/javascript" src="js/libs/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="js/libs/angular.min.js"></script>
+    <script type="text/javascript" src="js/libs/moment.min.js"></script>
+    <script type="text/javascript" src="js/libs/angular-moment.min.js"></script>
+    <script type="text/javascript" src="js/libs/paper.js"></script>
+    <script type="text/javascript" src="js/libs/materialize.min.js"></script>
+    <script type="text/javascript" src="js/libs/angular-materialize.min.js"></script>
+
+
+    <!-- application initialization -->
+    <script type="text/javascript" src="js/app.js"></script>
+
+</head>
+<body ng-app="kcdb" ng-controller="BodyController" ng-cloak>
+
+  <nav class="blue darken-3" role="navigation">
+    <div class="nav-wrapper">
+      <a id="logo-container" href="#" class="brand-logo"><i class="material-icons">aspect_ratio</i> KiCad Component DB</a>
+      <ul class="right hide-on-med-and-down">
+        <li ng-class="{active: page == 'search'}"><a ng-click="changePage('search')"><i class="material-icons">search</i></a></li>
+        <li ng-class="{active: page == 'sources'}"><a ng-click="changePage('sources')"><i class="material-icons">cloud_download</i></a></li>
+      </ul>
+      <a data-activates="nav-mobile"  data-sidenav="left" data-menuwidth="500" data-closeonclick="true" class="button-collapse"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+
+  <ul id="nav-mobile" class="side-nav">
+    <li><a ng-click="changePage('search')">Search</a></li>
+    <li><a ng-click="changePage('sources')">Sources</a></li>
+  </ul>
+
+
+    <div>
+      <div ng-show="page=='search'">
+        <div class="section" style="padding: 6px 15px;">
+          <h4>Search</h4>
+
+          <div>
+            <table>
+              <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Item Name</th>
+                    <th>Item Price</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>Alvin</td>
+                  <td>Eclair</td>
+                  <td>$0.87</td>
+                </tr>
+                <tr>
+                  <td>Alan</td>
+                  <td>Jellybean</td>
+                  <td>$3.76</td>
+                </tr>
+                <tr>
+                  <td>Jonathan</td>
+                  <td>Lollipop</td>
+                  <td>$7.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div ng-show="page=='sources'" ng-controller="SourcesController">
+        <div class="progress" ng-show="loading"><div class="indeterminate"></div></div>
+        <div class="section" style="padding: 6px 15px;">
+          <h4>Sources</h4>
+
+          <div ng-hide="loading">
+            <table>
+              <thead>
+                <tr>
+                    <th>URL</th>
+                    <th>Created</th>
+                    <th>Kind</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr ng-repeat="source in sources">
+                  <td>{{source.url}}</td>
+                  <td am-time-ago="source.created_at"></td>
+                  <td>{{source.kind}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+</body>
+</html>

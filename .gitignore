@@ -1,0 +1,16 @@
+/serv
+/kcdb
+/kcdb.db
+/bin/*
+/pkg/*
+/src/sourcegraph.com/*
+/src/github.com/alecthomas/*
+/src/github.com/derekparker/*
+/src/github.com/nicksnyder/*
+/src/github.com/nsf/*
+/src/github.com/rogpeppe/*
+/src/github.com/sqs/*
+/src/github.com/zmb3/*
+/src/github.com/fatih/*
+
+/src/golang.org/x/tools/cmd/*

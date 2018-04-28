@@ -1,0 +1,33 @@
+.slow-blink {
+  animation: blinker 1.5s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+}
+.fast-blink {
+  animation: blinker 1s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+}
+@keyframes blinker {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.anim-circle {
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+}
+
+.center-animated-circle {
+  position: absolute;
+  overflow: hidden;
+  left: 25px;
+  top: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.live-red {
+  background: #a94442;
+}
+
+.live-green {
+  background: #117511;
+}

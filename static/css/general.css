@@ -1,0 +1,13 @@
+
+.vicon {
+  vertical-align: middle !important;
+}
+
+.pointerCursor {
+    cursor: pointer;
+}
+
+.colorLabel {
+  padding-left: 23px !important;
+  padding-right: 10px;
+}
