@@ -48,6 +48,9 @@ type Source struct {
 
 // AddSource commits a new source record.
 func AddSource(ctx context.Context, src *Source, db *sql.DB) error {
+	dbLock.Lock()
+	defer dbLock.Unlock()
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -64,7 +67,10 @@ func AddSource(ctx context.Context, src *Source, db *sql.DB) error {
 
 // GetSources returns all sources.
 func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
-  res, err := db.QueryContext(ctx, `
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res, err := db.QueryContext(ctx, `
 		SELECT rowid, kind, created_at, url FROM sources;
 	`)
 	if err != nil {

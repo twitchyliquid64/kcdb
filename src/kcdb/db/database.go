@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var dbGlobal *sql.DB
+var dbLock sync.RWMutex
 
 // DatabaseTable represents the manager object for a database table.
 type DatabaseTable interface {
