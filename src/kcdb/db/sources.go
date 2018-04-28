@@ -92,6 +92,24 @@ func SourcesLastUpdated(ctx context.Context, limit int, db *sql.DB) ([]*Source, 
 	return output, nil
 }
 
+// SetSourceUpdated updates the updated_at value of the given source to the current time.
+func SetSourceUpdated(ctx context.Context, uid int, db *sql.DB) error {
+	dbLock.Lock()
+	defer dbLock.Unlock()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE sources SET updated_at=CURRENT_TIMESTAMP WHERE rowid = ?;`, uid)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 // GetSources returns all sources.
 func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	dbLock.RLock()

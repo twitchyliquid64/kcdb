@@ -20,6 +20,7 @@ type DatabaseTable interface {
 
 var tables = []DatabaseTable{
 	&SourceTable{},
+	&FootprintTable{},
 }
 
 // Init is called with database information to initialise a database session, creating any necessary tables.
@@ -48,4 +49,10 @@ func DB() *sql.DB {
 		panic("db not initialized")
 	}
 	return dbGlobal
+}
+
+// Vacuum reclaims space in the database.
+func Vacuum(db *sql.DB) error {
+	_, err := db.Exec("VACUUM;")
+	return err
 }

@@ -2,6 +2,7 @@ package ingestor
 
 import (
 	"context"
+	"fmt"
 	"kcdb/db"
 	"sync"
 	"time"
@@ -51,7 +52,9 @@ func ingestRoutine() {
 	for {
 		time.Sleep(time.Second)
 		if nextIngest.Before(time.Now()) {
-			doIngest()
+			if err := doIngest(); err != nil {
+				fmt.Printf("Ingest failed: %v\n", err)
+			}
 			lock.Lock()
 			nextIngest = time.Now().Add(time.Duration(ingestDelaySeconds) * time.Second)
 			current = nil
