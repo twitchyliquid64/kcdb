@@ -25,6 +25,7 @@ func (t *SourceTable) Setup(ctx context.Context, db *sql.DB) error {
   		rowid INTEGER PRIMARY KEY AUTOINCREMENT,
   	  kind STRING NOT NULL,
   	  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT 0,
       url VARCHAR(512) NOT NULL
   	);
     CREATE UNIQUE INDEX IF NOT EXISTS sources_url ON sources(url);
@@ -43,6 +44,7 @@ type Source struct {
 	UID       int       `json:"uid"`
 	Kind      string    `json:"kind"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 	URL       string    `json:"url"`
 }
 
@@ -71,7 +73,7 @@ func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	defer dbLock.RUnlock()
 
 	res, err := db.QueryContext(ctx, `
-		SELECT rowid, kind, created_at, url FROM sources;
+		SELECT rowid, kind, created_at, updated_at, url FROM sources;
 	`)
 	if err != nil {
 		return nil, err
@@ -81,7 +83,7 @@ func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	var output []*Source
 	for res.Next() {
 		var o Source
-		if err := res.Scan(&o.UID, &o.Kind, &o.CreatedAt, &o.URL); err != nil {
+		if err := res.Scan(&o.UID, &o.Kind, &o.CreatedAt, &o.UpdatedAt, &o.URL); err != nil {
 			return nil, err
 		}
 		output = append(output, &o)
