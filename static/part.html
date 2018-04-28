@@ -3,10 +3,10 @@
     <title>KiCad Component Database</title>
 
     <!-- Materialize CSS -->
-    <link rel="stylesheet" href="css/material-icons.css">
-    <link rel="stylesheet" href="css/materialize.min.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/general.css">
+    <link rel="stylesheet" href="/css/material-icons.css">
+    <link rel="stylesheet" href="/css/materialize.min.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/general.css">
 
     <style type="text/css">
     /**
@@ -18,22 +18,22 @@
     </style>
 
     <!-- JavaScript for: jQuery, angular, materialize, and angular-materialize. All of which are needed. -->
-    <script type="text/javascript" src="js/libs/jquery-3.0.0.min.js"></script>
-    <script type="text/javascript" src="js/libs/angular.min.js"></script>
-    <script type="text/javascript" src="js/libs/moment.min.js"></script>
-    <script type="text/javascript" src="js/libs/angular-moment.min.js"></script>
-    <script type="text/javascript" src="js/libs/paper.js"></script>
-    <script type="text/javascript" src="js/libs/materialize.min.js"></script>
-    <script type="text/javascript" src="js/libs/angular-materialize.min.js"></script>
-    <script type="text/javascript" src="js/libs/three.min.js"></script>
-    <script type="text/javascript" src="js/libs/threestats.min.js"></script>
-    <script type="text/javascript" src="js/libs/three.trackballcontrols.js"></script>
-    <script type="text/javascript" src="js/libs/filesaver.min.js"></script>
+    <script type="text/javascript" src="/js/libs/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="/js/libs/angular.min.js"></script>
+    <script type="text/javascript" src="/js/libs/moment.min.js"></script>
+    <script type="text/javascript" src="/js/libs/angular-moment.min.js"></script>
+    <script type="text/javascript" src="/js/libs/paper.js"></script>
+    <script type="text/javascript" src="/js/libs/materialize.min.js"></script>
+    <script type="text/javascript" src="/js/libs/angular-materialize.min.js"></script>
+    <script type="text/javascript" src="/js/libs/three.min.js"></script>
+    <script type="text/javascript" src="/js/libs/threestats.min.js"></script>
+    <script type="text/javascript" src="/js/libs/three.trackballcontrols.js"></script>
+    <script type="text/javascript" src="/js/libs/filesaver.min.js"></script>
 
 
     <!-- application initialization -->
-    <script type="text/javascript" src="js/app.js"></script>
-    <script type="text/javascript" src="js/view.js"></script>
+    <script type="text/javascript" src="/js/app.js"></script>
+    <script type="text/javascript" src="/js/view.js"></script>
 
 </head>
 <body ng-app="kcdb" ng-cloak>
@@ -50,29 +50,56 @@
     <div>
 
       <div class="section" style="padding: 6px 15px;" ng-controller="ViewController">
-        <div class="progress" ng-show="loading"><div class="indeterminate"></div></div>
+        <div class="loader"><div ng-show="loading" class="progress"><div class="indeterminate"></div></div></div>
         <h4>Part view</h4>
+        <blockquote ng-show="error"><h5>Error</h5>
+          <ul class="collection">
+            <li class="collection-item"><b>Error code</b>: {{ec()}}</li>
+            <li class="collection-item"><b>Explanation</b>: {{exp()}}</li>
+            <li class="collection-item"><b>The server said</b>: {{error.data}}{{error.reason}}</li>
+          </ul>
+        </blockquote>
 
         <div class="row">
           <div class="col s8" style="">
             <canvas id="partsCanvas" style="width: 100%; height: 580px;background-color:black;" tabindex='1'></canvas>
-            <br><i>NOTE: There is a known bug where rendered text does not reflect the thickness/size when in KiCad.</i>
+            <p><i>NOTE: There is a known bug where rendered text does not reflect the thickness/size when in KiCad.</i></p>
+            <p style="font-size: 10px;">KCDB-URL: {{path}}</p>
           </div>
 
           <div class="col s4">
-            <div class="input-field">
-              <input id="modName" type="text" ng-model="module.name" disabled>
-              <label for="modName">Name</label>
+            <div class="row input-field">
+              <div class="col s12">
+                <input id="modName" type="text" ng-model="module.name" disabled>
+                <label for="modName">Name</label>
+              </div>
             </div>
-            <div class="input-field">
-              <input id="modLayer" type="text" ng-model="module.layer" disabled>
-              <label for="modLayer">Primary layer</label>
+            <div class="row input-field">
+              <div class="col s4">
+                <input id="modLayer" type="text" ng-model="module.layer" disabled>
+                <label for="modLayer">Primary layer</label>
+              </div>
+              <div class="col s4">
+                <input id="pinCount" type="text" ng-model="module.pads.length" disabled>
+                <label for="pinCount">Pin count</label>
+              </div>
+              <div class="col s4">
+                <input id="modAttrs" type="text" ng-model="module.attrs" disabled>
+                <label for="modAttrs">Attributes</label>
+              </div>
             </div>
-            <div class="input-field">
-              <input id="modLastModified" type="text" ng-model="last_modified" disabled>
-              <label for="modLastModified">Last modified</label>
+            <div class="row input-field">
+              <div class="col s12">
+                <input id="modTags" type="text" ng-model="module.tags" disabled>
+                <label for="modTags">Tags</label>
+              </div>
             </div>
-
+            <div class="row input-field">
+              <div class="col s12">
+                <input id="modLastModified" type="text" ng-model="last_modified" disabled>
+                <label for="modLastModified">Last modified (Tedit)</label>
+              </div>
+            </div>
              <a href="#!" class="waves-effect waves-light btn" ng-click="redraw()"><i class="material-icons left">brush</i> Re-draw</a>
              <br>{{module}}
           </div>

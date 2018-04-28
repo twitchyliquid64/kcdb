@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,8 @@ func MakeFootprintURL(repoURL, repoPath string) string {
 	if repoURL[len(repoURL)-1] == '/' {
 		repoURL = repoURL[:len(repoURL)-2]
 	}
+	repoURL = strings.TrimPrefix(repoURL, "https://")
+	repoURL = strings.TrimPrefix(repoURL, "http://")
 	return repoURL + "::" + repoPath
 }
 

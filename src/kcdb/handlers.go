@@ -3,8 +3,9 @@ package kcdb
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"kcdb/db"
@@ -12,16 +13,41 @@ import (
 	"kcdb/mod"
 )
 
-// ModuleDetails replies with a JSON blob representing the Module.
-func ModuleDetails(w http.ResponseWriter, req *http.Request) {
-	f, err := ioutil.ReadFile("static/testdata/1x5pinheader.kicad_mod")
+// FootprintHandler serves the HTML for viewing a footprint
+func FootprintHandler(w http.ResponseWriter, req *http.Request) {
+	f, err := os.Open("static/part.html")
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		fmt.Printf("Err: %v\n", err)
 		return
 	}
+	defer f.Close()
 
-	mod, err := mod.DecodeModule(strings.NewReader(string(f)))
+	w.Header().Set("Content-Type", "text/html")
+	io.Copy(w, f)
+}
+
+// ModuleDetails replies with a JSON blob representing the Module.
+func ModuleDetails(w http.ResponseWriter, req *http.Request) {
+	var raw []byte
+	if strings.HasPrefix(req.URL.Path, "/module/details/") {
+		fp, err := db.FootprintByURL(req.Context(), req.URL.Path[len("/module/details/"):], db.DB())
+		if err != nil {
+			if err == os.ErrNotExist {
+				http.Error(w, "Not Found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+			}
+			fmt.Printf("Err: %v\n", err)
+			return
+		}
+		raw = fp.Data
+	} else {
+		http.Error(w, "The request did not indicate what footprint should be returned", http.StatusBadRequest)
+		return
+	}
+
+	mod, err := mod.DecodeModule(strings.NewReader(string(raw)))
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		fmt.Printf("Err: %v\n", err)

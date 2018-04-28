@@ -3,6 +3,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
   $scope.loading = false;
   $scope.last_modified = null;
   $scope.module = {};
+  $scope.path = window.location.pathname.substring('/footprint/'.length);
 
   $scope.canvas = document.getElementById('partsCanvas');
   $scope.canvas.style.width ='100%';
@@ -19,7 +20,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
     $scope.loading = true;
     $http({
       method: 'GET',
-      url: '/module/details',
+      url: '/module/details/' + $scope.path,
     }).then(function successCallback(response) {
       $scope.module = response.data
       $scope.loading = false;
@@ -156,6 +157,29 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
     //$scope.paperSurface.view.center = $scope.paperSurface.view.viewToProject(new $scope.paperSurface.Point(event.layerX, event.layerY));
     return false;
   }
+
+
+
+
+
+
+  // error info helpers.
+  $scope.ec = function(){
+    if (!$scope.error)return null;
+    if ($scope.error.success === false)
+      return 'N/A';
+    return $scope.error.status;
+  }
+  $scope.exp = function(){
+    if (!$scope.error)return null;
+    if ($scope.error.status === -1)
+      return "Network Error or server offline";
+    if ($scope.error.success === false)
+      return 'The server encountered a problem handling the request';
+    return $scope.error.statusText;
+  }
+
+
 
   $scope.load();
 }]);
