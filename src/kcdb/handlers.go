@@ -14,7 +14,7 @@ import (
 
 // ModuleDetails replies with a JSON blob representing the Module.
 func ModuleDetails(w http.ResponseWriter, req *http.Request) {
-	f, err := ioutil.ReadFile("static/testdata/SOIC-20_W7.5mm.kicad_mod")
+	f, err := ioutil.ReadFile("static/testdata/1x5pinheader.kicad_mod")
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		fmt.Printf("Err: %v\n", err)

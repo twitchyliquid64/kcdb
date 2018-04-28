@@ -96,10 +96,11 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
 
         pGroup.strokeColor = pGroup.fillColor = resolveColor('pad', pObj.layers[0]);
 
-        if (pObj.drill && pObj.drill > 0) {
+        // TODO: support other kinds of drill holes.
+        if (pObj.drill && pObj.drill.scalar > 0) {
           pGroup.addChild(new $scope.paperSurface.Shape.Circle({
             center: pObj.position,
-            radius: pObj.drill/2.0,
+            radius: pObj.drill.scalar/2.0,
             fillColor: resolveColor('drill', pObj.layers[0]),
           }));
         }
