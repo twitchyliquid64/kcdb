@@ -101,6 +101,7 @@ func upsertFootprint(source *db.Source, url string, b []byte, fp *mod.Module) (i
 			PinCount: len(fp.Pads),
 			Name:     fp.Name,
 			Attr:     strings.Join(fp.Attrs, ","),
+			Tags:     strings.Join(fp.Tags, ","),
 		}, db.DB())
 	}
 	return db.CreateFootprint(ctx, &db.Footprint{
@@ -110,5 +111,6 @@ func upsertFootprint(source *db.Source, url string, b []byte, fp *mod.Module) (i
 		PinCount: len(fp.Pads),
 		Name:     fp.Name,
 		Attr:     strings.Join(fp.Attrs, ","),
+		Tags:     strings.Join(fp.Tags, ","),
 	}, db.DB())
 }
