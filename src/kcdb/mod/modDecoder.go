@@ -2,6 +2,7 @@ package mod
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/nsf/sexp"
@@ -19,6 +20,31 @@ type FpLine struct {
 	End   Point2D `json:"end"`
 	Layer string  `json:"layer"`
 	Width float64 `json:"width"`
+}
+
+// FpCircle represents a graphical circle.
+type FpCircle struct {
+	Center Point2D `json:"center"`
+	End    Point2D `json:"end"`
+	Layer  string  `json:"layer"`
+	Width  float64 `json:"width"`
+}
+
+// FpArc represents a graphical arc.
+type FpArc struct {
+	Start Point2D `json:"start"`
+	End   Point2D `json:"end"`
+	Layer string  `json:"layer"`
+	Angle float64 `json:"angle"`
+	Width float64 `json:"width"`
+}
+
+// FpPoly represents a graphical polygon.
+type FpPoly struct {
+	At     Point2D   `json:"position"`
+	Points []Point2D `json:"points"`
+	Layer  string    `json:"layer"`
+	Width  float64   `json:"width"`
 }
 
 // FpText represents graphical text.
@@ -55,17 +81,26 @@ type Drill struct {
 
 // Module represents a Kicad module.
 type Module struct {
-	Name        string `json:"name"`
-	Tedit       string `json:"tedit"`
-	Description string `json:"description"`
-	Layer       string `json:"layer"`
-	Model       string `json:"model"`
+	Name        string  `json:"name"`
+	Tedit       string  `json:"tedit"`
+	Description string  `json:"description"`
+	Layer       string  `json:"layer"`
+	Position    Point2D `json:"position"`
+	Clearance   float64 `json:"clearance,omitempty"`
+	Model       string  `json:"model"`
 
-	Tags  []string `json:"tags"`
-	Attrs []string `json:"attrs"`
-	Lines []FpLine `json:"lines"`
-	Texts []FpText `json:"texts"`
-	Pads  []Pad    `json:"pads"`
+	SolderMaskMargin  float64 `json:"solder_mask_margin,omitempty"`
+	SolderPasteMargin float64 `json:"solder_paste_margin,omitempty"`
+	SolderPasteRatio  float64 `json:"solder_paste_ratio,omitempty"`
+
+	Tags     []string   `json:"tags"`
+	Attrs    []string   `json:"attrs"`
+	Lines    []FpLine   `json:"lines"`
+	Arcs     []FpArc    `json:"arcs"`
+	Circles  []FpCircle `json:"circles"`
+	Polygons []FpPoly   `json:"polygons"`
+	Texts    []FpText   `json:"texts"`
+	Pads     []Pad      `json:"pads"`
 }
 
 // DecodeModule reads a .kicad_mod file from a reader.
@@ -133,6 +168,16 @@ func DecodeModule(r io.RuneReader) (*Module, error) {
 					}
 					out.Attrs = append(out.Attrs, t)
 				}
+			case "at":
+				out.Position = Point2D{X: n.Child(1).MustFloat64(), Y: n.Child(2).MustFloat64()}
+			case "clearance":
+				out.Clearance = n.Child(1).MustFloat64()
+			case "solder_mask_margin":
+				out.SolderMaskMargin = n.Child(1).MustFloat64()
+			case "solder_paste_margin":
+				out.SolderPasteMargin = n.Child(1).MustFloat64()
+			case "solder_paste_ratio":
+				out.SolderPasteRatio = n.Child(1).MustFloat64()
 			case "model":
 				out.Model, err = n.Child(1).String()
 				if err != nil {
@@ -144,6 +189,24 @@ func DecodeModule(r io.RuneReader) (*Module, error) {
 					return nil, err
 				}
 				out.Lines = append(out.Lines, line)
+			case "fp_circle":
+				c, err := unmarshalFpCircle(n)
+				if err != nil {
+					return nil, err
+				}
+				out.Circles = append(out.Circles, c)
+			case "fp_arc":
+				a, err := unmarshalFpArc(n)
+				if err != nil {
+					return nil, err
+				}
+				out.Arcs = append(out.Arcs, a)
+			case "fp_poly":
+				p, err := unmarshalFpPoly(n)
+				if err != nil {
+					return nil, err
+				}
+				out.Polygons = append(out.Polygons, p)
 			case "fp_text":
 				txt, err := unmarshalFpText(n)
 				if err != nil {
@@ -164,6 +227,65 @@ func DecodeModule(r io.RuneReader) (*Module, error) {
 	}
 
 	return out, nil
+}
+
+func unmarshalFpArc(n sexp.Helper) (FpArc, error) {
+	arc := FpArc{}
+	for x := 1; x < n.MustNode().NumChildren(); x++ {
+		switch n.Child(x).Child(0).MustString() {
+		case "start":
+			arc.Start = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
+		case "end":
+			arc.End = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
+		case "layer":
+			arc.Layer = n.Child(x).Child(1).MustString()
+		case "width":
+			arc.Width = n.Child(x).Child(1).MustFloat64()
+		case "angle":
+			arc.Angle = n.Child(x).Child(1).MustFloat64()
+		}
+	}
+	return arc, nil
+}
+
+func unmarshalFpCircle(n sexp.Helper) (FpCircle, error) {
+	circle := FpCircle{}
+	for x := 1; x < n.MustNode().NumChildren(); x++ {
+		switch n.Child(x).Child(0).MustString() {
+		case "center":
+			circle.Center = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
+		case "end":
+			circle.End = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
+		case "layer":
+			circle.Layer = n.Child(x).Child(1).MustString()
+		case "width":
+			circle.Width = n.Child(x).Child(1).MustFloat64()
+		}
+	}
+	return circle, nil
+}
+
+func unmarshalFpPoly(n sexp.Helper) (FpPoly, error) {
+	p := FpPoly{}
+	for x := 1; x < n.MustNode().NumChildren(); x++ {
+		switch n.Child(x).Child(0).MustString() {
+		case "at":
+			p.At = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
+		case "pts":
+			for i := 1; i < n.Child(x).MustNode().NumChildren(); i++ {
+				if n.Child(x).Child(i).Child(0).MustString() == "xy" {
+					p.Points = append(p.Points, Point2D{X: n.Child(x).Child(i).Child(1).MustFloat64(), Y: n.Child(x).Child(i).Child(2).MustFloat64()})
+				} else {
+					return FpPoly{}, fmt.Errorf("cannot handle expression of type %q in fp_poly.pts stanza", n.Child(x).Child(i).Child(0).MustString())
+				}
+			}
+		case "layer":
+			p.Layer = n.Child(x).Child(1).MustString()
+		case "width":
+			p.Width = n.Child(x).Child(1).MustFloat64()
+		}
+	}
+	return p, nil
 }
 
 func unmarshalFpLine(n sexp.Helper) (FpLine, error) {

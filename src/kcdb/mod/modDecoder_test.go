@@ -86,3 +86,43 @@ func TestOvalDrill(t *testing.T) {
 		t.Fatal("Incorrect drill[1] value")
 	}
 }
+
+func TestDecodeModAt(t *testing.T) {
+	out, err := DecodeModule(strings.NewReader(`
+		(module Gauge_50mm_Type2_SilkScreenTop (layer F.Cu)
+		  (at 0 0)
+		  (descr "Gauge, Massstab, 50mm, SilkScreenTop, Type 2,")
+		  (tags "Gauge Massstab 50mm SilkScreenTop Type 2")
+		  (attr virtual)
+		  (fp_text reference REF** (at 20.50034 9.99998) (layer F.SilkS)
+		    (effects (font (size 1 1) (thickness 0.15)))
+		  )
+		  (fp_line (start 9.99998 0) (end 9.99998 1.99898) (layer F.SilkS) (width 0.15))
+		)
+    `))
+
+	if err != nil || out == nil {
+		t.Errorf("Expected value and no error, got err = %v, out = %+v", err, out)
+	}
+}
+
+func TestDecodeModPoly(t *testing.T) {
+	out, err := DecodeModule(strings.NewReader(`
+		(module WEEE-Logo_8.4x12mm_SilkScreen (layer F.Cu) (tedit 0)
+		  (descr "Waste Electrical and Electronic Equipment Directive")
+		  (tags "Logo WEEE")
+		  (attr virtual)
+		  (fp_text reference REF** (at 0 0) (layer F.SilkS) hide
+		    (effects (font (size 1 1) (thickness 0.15)))
+		  )
+		  (fp_text value WEEE-Logo_8.4x12mm_SilkScreen (at 0.75 0) (layer F.Fab) hide
+		    (effects (font (size 1 1) (thickness 0.15)))
+		  )
+		  (fp_poly (pts (xy 3.461372 5.976471) (xy -3.511177 5.976471) (xy -3.511177 4.258235) (xy 3.461372 4.258235)
+		    (xy 3.461372 5.976471)) (layer F.SilkS) (width 0.01))
+		)    `))
+
+	if err != nil || out == nil {
+		t.Errorf("Expected value and no error, got err = %v, out = %+v", err, out)
+	}
+}
