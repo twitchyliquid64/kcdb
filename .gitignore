@@ -1,6 +1,6 @@
 /serv
 /kcdb
-/kcdb.db
+/kc.db
 /bin/*
 /pkg/*
 /src/sourcegraph.com/*
