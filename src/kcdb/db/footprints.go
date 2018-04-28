@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"os"
 	"time"
 )
 
@@ -21,6 +22,9 @@ func (t *FootprintTable) Setup(ctx context.Context, db *sql.DB) error {
   	  source_id INT NOT NULL,
       url VARCHAR(1024) NOT NULL,
   	  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			name VARCHAR(128) NOT NULL,
+			pin_count INT NOT NULL,
+			attr VARCHAR(32) NOT NULL,
       data BLOB NOT NULL
   	);
     CREATE UNIQUE INDEX IF NOT EXISTS footprints_url ON footprints(url);
@@ -41,6 +45,10 @@ type Footprint struct {
 	URL       string    `json:"url"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Data      []byte    `json:"data,string"`
+
+	Name     string `json:"name"`
+	PinCount int    `json:"pin_count"`
+	Attr     string `json:"attr"`
 }
 
 // MakeFootprintURL creates a pretty URL for the footprint.
@@ -84,7 +92,7 @@ func UpdateFootprint(ctx context.Context, fp *Footprint, db *sql.DB) error {
 	}
 
 	_, err = tx.ExecContext(ctx, `
-    UPDATE footprints SET data=?, updated_at=CURRENT_TIMESTAMP WHERE rowid = ?;`, fp.Data, fp.UID)
+    UPDATE footprints SET data=?, pin_count=?, name=?, attr=?, updated_at=CURRENT_TIMESTAMP WHERE rowid = ?;`, fp.Data, fp.PinCount, fp.Name, fp.Attr, fp.UID)
 	if err != nil {
 		return err
 	}
@@ -102,8 +110,8 @@ func CreateFootprint(ctx context.Context, fp *Footprint, db *sql.DB) (int, error
 	}
 	e, err := tx.ExecContext(ctx, `
     INSERT INTO
-      footprints (source_id, url, data)
-      VALUES (?, ?, ?);`, fp.SourceID, fp.URL, fp.Data)
+      footprints (source_id, url, data, name, pin_count, attr)
+      VALUES (?, ?, ?, ?, ?, ?);`, fp.SourceID, fp.URL, fp.Data, fp.Name, fp.PinCount, fp.Attr)
 	if err != nil {
 		return 0, err
 	}
@@ -116,4 +124,23 @@ func CreateFootprint(ctx context.Context, fp *Footprint, db *sql.DB) (int, error
 		return 0, err
 	}
 	return int(id), nil
+}
+
+// FootprintByURL returns the specified footprint
+func FootprintByURL(ctx context.Context, url string, db *sql.DB) (*Footprint, error) {
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res, err := db.QueryContext(ctx, `
+    SELECT rowid, source_id, updated_at, url, data, name, pin_count, attr FROM footprints WHERE url = ?;
+  `, url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+	if !res.Next() {
+		return nil, os.ErrNotExist
+	}
+	var fp Footprint
+	return &fp, res.Scan(&fp.UID, &fp.SourceID, &fp.UpdatedAt, &fp.URL, &fp.Data, &fp.Name, &fp.PinCount, &fp.Attr)
 }

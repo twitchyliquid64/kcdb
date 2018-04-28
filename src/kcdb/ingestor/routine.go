@@ -63,17 +63,20 @@ func doIngest() error {
 				return err
 			}
 			url := db.MakeFootprintURL(current.URL, path[len(tmpDir)+1:])
-			_, err = upsertFootprint(current, url, b)
-			if err != nil {
-				return err
-			}
 
 			footprint, err := mod.DecodeModule(strings.NewReader(string(b)))
 			if err != nil {
 				fmt.Printf("[ingest][footprint] Failed parsing %q: %v\n", path, err)
+				fmt.Println(string(b))
 				return nil
 			}
-			fmt.Printf("[ingest][footprint] Successfully parsed %s\n", footprint.Name)
+
+			_, err = upsertFootprint(current, url, b, footprint)
+			if err != nil {
+				return err
+			}
+
+			//fmt.Printf("[ingest][footprint] Successfully parsed %s\n", footprint.Name)
 		}
 		return nil
 	})
@@ -84,14 +87,28 @@ func doIngest() error {
 	return db.SetSourceUpdated(context.Background(), current.UID, db.DB())
 }
 
-func upsertFootprint(source *db.Source, url string, b []byte) (int, error) {
+func upsertFootprint(source *db.Source, url string, b []byte, fp *mod.Module) (int, error) {
 	ctx := context.Background()
 	exists, uid, err := db.FootprintExists(ctx, url, db.DB())
 	if err != nil {
 		return 0, err
 	}
 	if exists {
-		return uid, db.UpdateFootprint(ctx, &db.Footprint{UID: uid, Data: b, URL: url, SourceID: source.UID}, db.DB())
+		return uid, db.UpdateFootprint(ctx, &db.Footprint{UID: uid,
+			Data:     b,
+			URL:      url,
+			SourceID: source.UID,
+			PinCount: len(fp.Pads),
+			Name:     fp.Name,
+			Attr:     strings.Join(fp.Attrs, ","),
+		}, db.DB())
 	}
-	return db.CreateFootprint(ctx, &db.Footprint{Data: b, URL: url, SourceID: source.UID}, db.DB())
+	return db.CreateFootprint(ctx, &db.Footprint{
+		Data:     b,
+		URL:      url,
+		SourceID: source.UID,
+		PinCount: len(fp.Pads),
+		Name:     fp.Name,
+		Attr:     strings.Join(fp.Attrs, ","),
+	}, db.DB())
 }
