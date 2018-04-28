@@ -75,6 +75,19 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
         $scope.componentLayer.addChild(l);
       }
 
+    // circles
+    if ($scope.module && $scope.module.circles)
+      for (var i = 0; i < $scope.module.circles.length; i++) {
+        var cObj = $scope.module.circles[i];
+        var c = new $scope.paperSurface.Shape.Circle({
+          center: cObj.center,
+          radius: new $scope.paperSurface.Point(cObj.center).getDistance(cObj.end),
+        });
+        c.strokeColor = resolveColor('circle', cObj.layer);
+        c.strokeWidth = cObj.width * 5;
+        $scope.componentLayer.addChild(c);
+      }
+
     // pads
     if ($scope.module && $scope.module.pads)
       for (var i = 0; i < $scope.module.pads.length; i++) {
@@ -88,6 +101,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
             }));
             break;
           case 'oval':
+          case 'circle':
             pGroup.addChild(new $scope.paperSurface.Shape.Ellipse({
               center: pObj.position,
               size: new $scope.paperSurface.Point(pObj.size).divide(2),
