@@ -95,8 +95,8 @@
 
           <div ng-show="ingest_status">
             <p>The ingestor is scheduled to enumerate the next repository
-              <span ng-if="!ingestScheduledNow(ingest_status.next_ingest)">in <span am-time-ago="ingest_status.next_ingest"></span></span>
-              <span ng-if="ingestScheduledNow(ingest_status.next_ingest)">soon</span>.</p>
+              <span ng-if="!ingestScheduledNow(ingest_status.next_ingest)"><span am-time-ago="ingest_status.next_ingest"></span>.</span>
+              <span ng-if="ingestScheduledNow(ingest_status.next_ingest)">soon.</span></p>
 
             <table>
               <thead>

@@ -23,10 +23,11 @@ type FpLine struct {
 
 // FpText represents graphical text.
 type FpText struct {
-	Pos   Point2D `json:"position"`
-	Kind  string  `json:"kind"`
-	Value string  `json:"value"`
-	Layer string  `json:"layer"`
+	Pos    Point2D `json:"position"`
+	Kind   string  `json:"kind"`
+	Value  string  `json:"value"`
+	Layer  string  `json:"layer"`
+	Hidden bool    `json:"hidden"`
 
 	Size      Point2D `json:"size"`
 	Thickness float64 `json:"thickness"`
@@ -34,14 +35,22 @@ type FpText struct {
 
 // Pad represents a pad in a component footprint.
 type Pad struct {
-	Pin   int     `json:"pin"`
-	Kind  string  `json:"kind"`
-	Shape string  `json:"shape"`
-	Drill float64 `json:"drill"`
+	Pin   int    `json:"pin"`
+	Kind  string `json:"kind"`
+	Shape string `json:"shape"`
+	Drill Drill  `json:"drill"`
 
 	Pos    Point2D  `json:"position"`
 	Size   Point2D  `json:"size"`
 	Layers []string `json:"layers"`
+}
+
+// Drill represents pad drill parameters.
+type Drill struct {
+	Kind    string  `json:"kind"`
+	Scalar  float64 `json:"scalar"`
+	Ellipse Point2D `json:"ellipse"`
+	Offset  Point2D `json:"offset"`
 }
 
 // Module represents a Kicad module.
@@ -181,6 +190,16 @@ func unmarshalFpText(n sexp.Helper) (FpText, error) {
 	}
 
 	for x := 3; x < n.MustNode().NumChildren(); x++ {
+		if n.Child(x).IsScalar() {
+			if s, err := n.Child(x).String(); err == nil {
+				switch s {
+				case "hide":
+					txt.Hidden = true
+				}
+				continue
+			}
+		}
+
 		switch n.Child(x).Child(0).MustString() {
 		case "at":
 			txt.Pos = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
@@ -202,11 +221,39 @@ func unmarshalFpText(n sexp.Helper) (FpText, error) {
 	return txt, nil
 }
 
+func decodeDrill(n sexp.Helper) (Drill, error) {
+	d := Drill{}
+
+	for x := 1; x < n.MustNode().NumChildren(); x++ {
+		if n.Child(x).IsList() {
+			switch n.Child(x).Child(0).MustString() {
+			case "offset":
+				d.Offset = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
+			}
+		} else {
+			if _, err := n.Child(x).Float64(); err != nil { // kind + 2d parameters
+				d.Kind = n.Child(x).MustString()
+				d.Ellipse = Point2D{X: n.Child(x + 1).MustFloat64(), Y: n.Child(x + 2).MustFloat64()}
+				x += 2
+				return d, nil
+			} else {
+				// just a scalar (radius)
+				d.Scalar = n.Child(1).MustFloat64()
+			}
+		}
+	}
+
+	return d, nil
+}
+
 func unmarshalPad(n sexp.Helper) (Pad, error) {
+	var err error
 	pad := Pad{
-		Pin:   n.Child(1).MustInt(),
 		Kind:  n.Child(2).MustString(),
 		Shape: n.Child(3).MustString(),
+	}
+	if v, err := n.Child(1).Int(); err == nil { // Pads without an int pin are just disconnected ones
+		pad.Pin = v
 	}
 
 	for x := 4; x < n.MustNode().NumChildren(); x++ {
@@ -216,7 +263,11 @@ func unmarshalPad(n sexp.Helper) (Pad, error) {
 		case "size":
 			pad.Size = Point2D{X: n.Child(x).Child(1).MustFloat64(), Y: n.Child(x).Child(2).MustFloat64()}
 		case "drill":
-			pad.Drill = n.Child(x).Child(1).MustFloat64()
+			pad.Drill, err = decodeDrill(n.Child(x))
+			if err != nil {
+				return pad, err
+			}
+
 		case "layers":
 			s := n.Child(x)
 			for i := 1; i < s.MustNode().NumChildren(); i++ {

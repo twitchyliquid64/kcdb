@@ -3,7 +3,6 @@ package ingestor
 import (
 	"context"
 	"kcdb/db"
-	"os"
 	"sync"
 	"time"
 )
@@ -18,10 +17,7 @@ func Start(delaySecs int) error {
 	ingestDelaySeconds = delaySecs
 	nextIngest = time.Now().Add(time.Duration(ingestDelaySeconds) * time.Second / 2)
 
-	if err := os.RemoveAll("/tmp/kcdb_repo"); err != nil && os.IsNotExist(err) {
-		return err
-	}
-	if err := os.Mkdir("/tmp/kcdb_repo", 0755); err != nil {
+	if err := clearDir(); err != nil {
 		return err
 	}
 
@@ -52,5 +48,14 @@ func State() (*db.Source, int, time.Time) {
 }
 
 func ingestRoutine() {
-
+	for {
+		time.Sleep(time.Second)
+		if nextIngest.Before(time.Now()) {
+			doIngest()
+			lock.Lock()
+			nextIngest = time.Now().Add(time.Duration(ingestDelaySeconds) * time.Second)
+			current = nil
+			lock.Unlock()
+		}
+	}
 }
