@@ -10,10 +10,12 @@ import (
 
 	"kcdb"
 	"kcdb/db"
+	"kcdb/ingestor"
 )
 
 var (
-	listenerFlag = flag.String("listener", "localhost:8080", "Address to listen on")
+	listenerFlag    = flag.String("listener", "localhost:8080", "Address to listen on")
+	updateDelayFlag = flag.Int("update-delay", 120, "Seconds between ingesting from sources")
 )
 
 func main() {
@@ -30,6 +32,11 @@ func main() {
 	if flag.Arg(0) == "add-git-source" {
 		newGitSource(ctx, flag.Arg(1))
 		return
+	}
+
+	if err := ingestor.Start(*updateDelayFlag); err != nil {
+		fmt.Printf("Failed to setup ingestor: %v\n", err)
+		os.Exit(1)
 	}
 
 	fmt.Printf("Now listening on %s\n", *listenerFlag)
@@ -60,4 +67,5 @@ func initHandlers() {
 	http.Handle("/", fs)
 	http.HandleFunc("/module/details", kcdb.ModuleDetails)
 	http.HandleFunc("/sources/all", kcdb.ListSources)
+	http.HandleFunc("/ingestor/status", kcdb.IngestState)
 }

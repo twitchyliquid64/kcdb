@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"kcdb/db"
-	"kcdb/mod"
 	"kcdb/ingestor"
+	"kcdb/mod"
 )
 
 // ModuleDetails replies with a JSON blob representing the Module.
@@ -38,6 +38,7 @@ func ModuleDetails(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
+// ListSources responds with a list of sources.
 func ListSources(w http.ResponseWriter, req *http.Request) {
 	sources, err := db.GetSources(req.Context(), db.DB())
 	if err != nil {
@@ -56,12 +57,20 @@ func ListSources(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
+// IngestState responds with the current state of the ingestor.
 func IngestState(w http.ResponseWriter, req *http.Request) {
+	next, err := ingestor.ComputeIngestTargets()
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
 	current, delay, nextIngest := ingestor.State()
 	b, err := json.Marshal(map[string]interface{}{
-		"current": current,
+		"current":              current,
 		"ingest_delay_seconds": delay,
-		"next_source": nextIngest,
+		"next_ingest":          nextIngest,
+		"next_sources":         next,
 	})
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)

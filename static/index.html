@@ -52,7 +52,8 @@
 
     <div>
       <div ng-show="page=='search'">
-        <div class="section" style="padding: 6px 15px;">
+        <div class="loader"><div ng-show="loading" class="progress"><div class="indeterminate"></div></div></div>
+        <div class="section" style="padding: 0px 15px;">
           <h4>Search</h4>
 
           <div>
@@ -88,25 +89,35 @@
       </div>
 
       <div ng-show="page=='sources'" ng-controller="SourcesController">
-        <div class="progress" ng-show="loading"><div class="indeterminate"></div></div>
-        <div class="section" style="padding: 6px 15px;">
+        <div class="loader"><div ng-show="loading" class="progress"><div class="indeterminate"></div></div></div>
+        <div class="section" style="padding: 0px 15px;">
           <h4>Sources</h4>
 
-          <div ng-hide="loading">
+          <div ng-show="ingest_status">
+            <p>The ingestor is scheduled to enumerate the next repository
+              <span ng-if="!ingestScheduledNow(ingest_status.next_ingest)">in <span am-time-ago="ingest_status.next_ingest"></span></span>
+              <span ng-if="ingestScheduledNow(ingest_status.next_ingest)">soon</span>.</p>
+
             <table>
               <thead>
                 <tr>
                     <th>URL</th>
-                    <th>Created</th>
                     <th>Kind</th>
+                    <th>Last updated</th>
                 </tr>
               </thead>
 
               <tbody>
                 <tr ng-repeat="source in sources">
                   <td>{{source.url}}</td>
-                  <td am-time-ago="source.created_at"></td>
                   <td>{{source.kind}}</td>
+                  <td>
+                    <span am-time-ago="source.updated_at" ng-if="hasUp(source.updated_at)"></span>
+                    <span ng-if="!hasUp(source.updated_at)">Never</span>
+                    <span ng-if="isNext(source.uid)">
+                      <span class="badge" style="position: static;">next ingest</span>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>

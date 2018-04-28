@@ -67,6 +67,31 @@ func AddSource(ctx context.Context, src *Source, db *sql.DB) error {
 	return tx.Commit()
 }
 
+// SourcesLastUpdated returns sources in order of least-recently updated.
+func SourcesLastUpdated(ctx context.Context, limit int, db *sql.DB) ([]*Source, error) {
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res, err := db.QueryContext(ctx, `
+		SELECT rowid, kind, created_at, updated_at, url FROM sources ORDER BY updated_at ASC LIMIT ?;
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var output []*Source
+	for res.Next() {
+		var o Source
+		if err := res.Scan(&o.UID, &o.Kind, &o.CreatedAt, &o.UpdatedAt, &o.URL); err != nil {
+			return nil, err
+		}
+		output = append(output, &o)
+	}
+
+	return output, nil
+}
+
 // GetSources returns all sources.
 func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	dbLock.RLock()

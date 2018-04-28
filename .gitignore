@@ -13,4 +13,4 @@
 /src/github.com/zmb3/*
 /src/github.com/fatih/*
 
-/src/golang.org/x/tools/cmd/*
+/src/golang.org/x/tools/*

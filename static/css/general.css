@@ -11,3 +11,9 @@
   padding-left: 23px !important;
   padding-right: 10px;
 }
+
+.loader {
+  height: 12px;
+  width: 100%;
+  overflow: hidden;
+}
