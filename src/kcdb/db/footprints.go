@@ -26,6 +26,7 @@ func (t *FootprintTable) Setup(ctx context.Context, db *sql.DB) error {
 			name VARCHAR(128) NOT NULL,
 			pin_count INT NOT NULL,
 			attr VARCHAR(32) NOT NULL,
+			tags VARCHAR(256) NOT NULL,
       data BLOB NOT NULL
   	);
     CREATE UNIQUE INDEX IF NOT EXISTS footprints_url ON footprints(url);
@@ -50,6 +51,7 @@ type Footprint struct {
 	Name     string `json:"name"`
 	PinCount int    `json:"pin_count"`
 	Attr     string `json:"attr"`
+	Tags     string `json:"tags"`
 }
 
 // MakeFootprintURL creates a pretty URL for the footprint.
@@ -95,7 +97,7 @@ func UpdateFootprint(ctx context.Context, fp *Footprint, db *sql.DB) error {
 	}
 
 	_, err = tx.ExecContext(ctx, `
-    UPDATE footprints SET data=?, pin_count=?, name=?, attr=?, updated_at=CURRENT_TIMESTAMP WHERE rowid = ?;`, fp.Data, fp.PinCount, fp.Name, fp.Attr, fp.UID)
+    UPDATE footprints SET data=?, pin_count=?, name=?, attr=?, tags=?, updated_at=CURRENT_TIMESTAMP WHERE rowid = ?;`, fp.Data, fp.PinCount, fp.Name, fp.Attr, fp.Tags, fp.UID)
 	if err != nil {
 		return err
 	}
@@ -113,8 +115,8 @@ func CreateFootprint(ctx context.Context, fp *Footprint, db *sql.DB) (int, error
 	}
 	e, err := tx.ExecContext(ctx, `
     INSERT INTO
-      footprints (source_id, url, data, name, pin_count, attr)
-      VALUES (?, ?, ?, ?, ?, ?);`, fp.SourceID, fp.URL, fp.Data, fp.Name, fp.PinCount, fp.Attr)
+      footprints (source_id, url, data, name, pin_count, attr, tags)
+      VALUES (?, ?, ?, ?, ?, ?, ?);`, fp.SourceID, fp.URL, fp.Data, fp.Name, fp.PinCount, fp.Attr, fp.Tags)
 	if err != nil {
 		return 0, err
 	}
@@ -135,7 +137,7 @@ func FootprintByURL(ctx context.Context, url string, db *sql.DB) (*Footprint, er
 	defer dbLock.RUnlock()
 
 	res, err := db.QueryContext(ctx, `
-    SELECT rowid, source_id, updated_at, url, data, name, pin_count, attr FROM footprints WHERE url = ?;
+    SELECT rowid, source_id, updated_at, url, data, name, pin_count, attr, tags FROM footprints WHERE url = ?;
   `, url)
 	if err != nil {
 		return nil, err
@@ -145,5 +147,53 @@ func FootprintByURL(ctx context.Context, url string, db *sql.DB) (*Footprint, er
 		return nil, os.ErrNotExist
 	}
 	var fp Footprint
-	return &fp, res.Scan(&fp.UID, &fp.SourceID, &fp.UpdatedAt, &fp.URL, &fp.Data, &fp.Name, &fp.PinCount, &fp.Attr)
+	return &fp, res.Scan(&fp.UID, &fp.SourceID, &fp.UpdatedAt, &fp.URL, &fp.Data, &fp.Name, &fp.PinCount, &fp.Attr, &fp.Tags)
+}
+
+// FpSearchParam specifies parameters to constrain a footprint search.
+type FpSearchParam struct {
+	Keywords []string
+	PinCount int
+	Attr     string
+}
+
+// FootprintSearch performs a footprint search
+func FootprintSearch(ctx context.Context, search FpSearchParam, db *sql.DB) ([]*Footprint, error) {
+	where := ""
+	params := []interface{}{}
+	for i, kw := range search.Keywords {
+		where += "(name LIKE ? OR tags LIKE ?)"
+		params = append(params, "%"+kw+"%", "%"+kw+"%")
+		if i < (len(search.Keywords) - 1) {
+			where += " AND "
+		}
+	}
+	if search.Attr != "" {
+		where += " AND attr LIKE ?"
+		params = append(params, search.Attr)
+	}
+	if search.PinCount != 0 {
+		where += " AND pin_count = ?"
+		params = append(params, search.PinCount)
+	}
+
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res, err := db.QueryContext(ctx, "SELECT rowid, source_id, updated_at, url, name, pin_count, attr, tags FROM footprints WHERE "+where+" LIMIT 50;", params...)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var out []*Footprint
+	for res.Next() {
+		var fp Footprint
+		if err := res.Scan(&fp.UID, &fp.SourceID, &fp.UpdatedAt, &fp.URL, &fp.Name, &fp.PinCount, &fp.Attr, &fp.Tags); err != nil {
+			return nil, err
+		}
+		out = append(out, &fp)
+	}
+
+	return out, nil
 }

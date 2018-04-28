@@ -66,3 +66,44 @@ app.controller('SourcesController', ["$scope", "$http", "$rootScope", "$interval
       }
     });
 }]);
+
+
+app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval", function ($scope, $http, $rootScope, $interval) {
+    $scope.loading = false;
+    $scope.results = [];
+    $scope.searchQ = '';
+
+    $scope.search = function(query){
+      $scope.loading = true;
+      $scope.error = null;
+      $http({
+        method: 'POST',
+        url: '/search/all',
+        data: {query: $scope.searchQ},
+      }).then(function successCallback(response) {
+        $scope.results = response.data;
+        $scope.loading = false;
+      }, function errorCallback(response) {
+        $scope.loading = false;
+        $scope.error = response;
+      });
+    }
+
+
+
+    // error info helpers.
+    $scope.ec = function(){
+      if (!$scope.error)return null;
+      if ($scope.error.success === false)
+        return 'N/A';
+      return $scope.error.status;
+    }
+    $scope.exp = function(){
+      if (!$scope.error)return null;
+      if ($scope.error.status === -1)
+        return "Network Error or server offline";
+      if ($scope.error.success === false)
+        return 'The server encountered a problem handling the request';
+      return $scope.error.statusText;
+    }
+}]);

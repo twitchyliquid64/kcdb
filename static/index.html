@@ -51,36 +51,46 @@
 
 
     <div>
-      <div ng-show="page=='search'">
+      <div ng-show="page=='search'" ng-controller="SearchController">
         <div class="loader"><div ng-show="loading" class="progress"><div class="indeterminate"></div></div></div>
-        <div class="section" style="padding: 0px 15px;">
-          <h4>Search</h4>
+        <blockquote ng-show="error"><h5>Error</h5>
+          <ul class="collection">
+            <li class="collection-item"><b>Error code</b>: {{ec()}}</li>
+            <li class="collection-item"><b>Explanation</b>: {{exp()}}</li>
+            <li class="collection-item"><b>The server said</b>: {{error.data}}{{error.reason}}</li>
+          </ul>
+        </blockquote>
 
-          <div>
+        <div class="section" style="padding: 0px 15px;">
+          <div class="fields-container">
+            <div class="row" style="margin-bottom: 2px;">
+              <div class="input-field col s12">
+                <i class="material-icons prefix">search</i>
+                <input id="searchInput" type="text" ng-model="searchQ" placeholder="try 'SOT-23 pin_count=3'"
+                       ng-keyup="$event.keyCode == 13 && search(searchQ)">
+              </div>
+            </div>
+          </div>
+
+          <div ng-show="results.length">
             <table>
               <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Item Name</th>
-                    <th>Item Price</th>
+                    <th>Attr</th>
+                    <th>Tags</th>
+                    <th>Pins count</th>
                 </tr>
               </thead>
 
               <tbody>
-                <tr>
-                  <td>Alvin</td>
-                  <td>Eclair</td>
-                  <td>$0.87</td>
-                </tr>
-                <tr>
-                  <td>Alan</td>
-                  <td>Jellybean</td>
-                  <td>$3.76</td>
-                </tr>
-                <tr>
-                  <td>Jonathan</td>
-                  <td>Lollipop</td>
-                  <td>$7.00</td>
+                <tr ng-repeat="r in results">
+                  <td>
+                    <a href="/footprint/{{r.url}}">{{r.name}}</a>
+                  </td>
+                  <td ng-bind="r.attr"></td>
+                  <td ng-bind="r.tags"></td>
+                  <td ng-bind="r.pin_count"></td>
                 </tr>
               </tbody>
             </table>

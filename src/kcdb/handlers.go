@@ -11,7 +11,37 @@ import (
 	"kcdb/db"
 	"kcdb/ingestor"
 	"kcdb/mod"
+	"kcdb/search"
 )
+
+// SearchHandler performs a search.
+func SearchHandler(w http.ResponseWriter, req *http.Request) {
+	var query struct {
+		Query string `json:"query"`
+	}
+	if err := json.NewDecoder(req.Body).Decode(&query); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
+
+	results, err := search.Search(req.Context(), query.Query)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
+
+	b, err := json.Marshal(results)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
+}
 
 // FootprintHandler serves the HTML for viewing a footprint
 func FootprintHandler(w http.ResponseWriter, req *http.Request) {
