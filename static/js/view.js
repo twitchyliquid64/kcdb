@@ -88,6 +88,16 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
         $scope.componentLayer.addChild(c);
       }
 
+    // polygons
+    if ($scope.module && $scope.module.polygons)
+      for (var i = 0; i < $scope.module.polygons.length; i++) {
+        var pObj = $scope.module.polygons[i];
+        var p = new $scope.paperSurface.Path(pObj.points);
+        p.strokeColor = p.fillColor = resolveColor('polygon', pObj.layer);
+        p.strokeWidth = pObj.width * 5;
+        $scope.componentLayer.addChild(p);
+      }
+
     // pads
     if ($scope.module && $scope.module.pads)
       for (var i = 0; i < $scope.module.pads.length; i++) {

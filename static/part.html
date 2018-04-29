@@ -100,7 +100,16 @@
                 <label for="modLastModified">Last modified (Tedit)</label>
               </div>
             </div>
-             <a href="#!" class="waves-effect waves-light btn" ng-click="redraw()"><i class="material-icons left">brush</i> Re-draw</a>
+            <div>
+              <a href="#!" class="waves-effect waves-light btn" ng-click="redraw()"><i class="material-icons left">brush</i> Re-draw</a>
+            </div>
+            <div ng-show="module.arcs.length">
+              <blockquote><h5><i class="material-icons left">warning</i> Warnings</h5>
+                <ul class="collection">
+                  <li class="collection-item" ng-show="module.arcs.length"><b>Render omitted</b>: This footprint contains arcs, which are not currently supported.</li>
+                </ul>
+              </blockquote>
+            </div>
              <br>{{module}}
           </div>
         </div>
