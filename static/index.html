@@ -79,14 +79,14 @@
                     <th>Name</th>
                     <th>Attr</th>
                     <th>Tags</th>
-                    <th>Pins count</th>
+                    <th>Pins</th>
                 </tr>
               </thead>
 
               <tbody>
                 <tr ng-repeat="r in results">
                   <td>
-                    <a href="/footprint/{{r.url}}">{{r.name}}</a>
+                    <a href="/footprint/{{r.url}}?fpid={{r.uid}}">{{r.name}}</a>
                   </td>
                   <td ng-bind="r.attr"></td>
                   <td ng-bind="r.tags"></td>

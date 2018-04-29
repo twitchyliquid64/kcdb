@@ -31,6 +31,10 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($sc
   }
   $scope.redraw = paint;
 
+  $scope.goto = function(){
+    window.location = 'https://' + $scope.path.replace('::', '/tree/master/');
+  }
+
   $scope.$watchGroup(['module'], function (newValue, oldValue, scope) {
     $scope.last_modified = moment(1000*parseInt($scope.module.tedit, 16));
     console.log("Module:", $scope.module);
