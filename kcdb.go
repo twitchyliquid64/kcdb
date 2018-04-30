@@ -11,16 +11,19 @@ import (
 	"kcdb"
 	"kcdb/db"
 	"kcdb/ingestor"
+	"kcdb/admin"
 )
 
 var (
 	listenerFlag    = flag.String("listener", "localhost:8080", "Address to listen on")
 	updateDelayFlag = flag.Int("update-delay", 120, "Seconds between ingesting from sources")
+	adminSecretFlag = flag.String("admin-secret", "", "Secret to use for admin RPCs")
 )
 
 func main() {
 	flag.Parse()
 	ctx := context.Background()
+	admin.SetSecret(*adminSecretFlag)
 
 	initHandlers()
 	_, err := db.Init(ctx, "kc.db")
@@ -71,4 +74,6 @@ func initHandlers() {
 	http.HandleFunc("/sources/all", kcdb.ListSources)
 	http.HandleFunc("/search/all", kcdb.SearchHandler)
 	http.HandleFunc("/ingestor/status", kcdb.IngestState)
+	http.HandleFunc("/admin/sources/params", admin.UpdateSourceAdmin)
+	http.HandleFunc("/admin/sources/add", admin.AddSourceAdmin)
 }

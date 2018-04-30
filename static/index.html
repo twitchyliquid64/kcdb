@@ -112,6 +112,7 @@
             <table>
               <thead>
                 <tr>
+                    <th>#</th>
                     <th>URL</th>
                     <th>Kind</th>
                     <th>Last updated</th>
@@ -120,6 +121,7 @@
 
               <tbody>
                 <tr ng-repeat="source in sources">
+                  <td>{{source.uid}}</td>
                   <td>{{source.url}}</td>
                   <td>{{source.kind}}</td>
                   <td>

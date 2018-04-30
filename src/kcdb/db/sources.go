@@ -144,6 +144,24 @@ func SetSourceUpdated(ctx context.Context, uid int, db *sql.DB) error {
 	return tx.Commit()
 }
 
+// SetSourceAdmin sets the tag and rank for a source.
+func SetSourceAdmin(ctx context.Context, uid, rank int, tag string, db *sql.DB) error {
+	dbLock.Lock()
+	defer dbLock.Unlock()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE sources SET tag=?,ranking_priority=? WHERE rowid = ?;`, tag, rank, uid)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 // GetSources returns all sources.
 func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	dbLock.RLock()
