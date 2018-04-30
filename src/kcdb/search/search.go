@@ -32,5 +32,9 @@ func Search(ctx context.Context, q string) ([]*db.Footprint, error) {
 		}
 	}
 
-	return db.FootprintSearch(ctx, params, db.DB())
+	fps, err := db.FootprintSearch(ctx, params, db.DB())
+	if err != nil {
+		return nil, err
+	}
+	return fps, nil
 }

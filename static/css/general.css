@@ -17,3 +17,20 @@
   width: 100%;
   overflow: hidden;
 }
+
+.tag-source {
+  display: inline-block;
+  padding: .25em .4em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25rem;
+}
+
+.tag-secondary {
+    color: #fff;
+    background-color: #6c757d;
+}

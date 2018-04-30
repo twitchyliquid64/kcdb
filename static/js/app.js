@@ -71,6 +71,7 @@ app.controller('SourcesController', ["$scope", "$http", "$rootScope", "$interval
 app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval", function ($scope, $http, $rootScope, $interval) {
     $scope.loading = false;
     $scope.results = [];
+    $scope.sources = {};
     $scope.searchQ = '';
 
     $scope.search = function(query){
@@ -89,7 +90,26 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
       });
     }
 
+    $scope.showTag = function(source_uid) {
+      return !!$scope.sources[source_uid].tag;
+    }
 
+    $scope.loadSources = function(){
+      $scope.loading = true;
+      $http({
+        method: 'GET',
+        url: '/sources/all',
+      }).then(function successCallback(response) {
+        for (var i = 0; i < response.data.length; i++) {
+          $scope.sources[response.data[i].uid] = response.data[i];
+        }
+        $scope.loading = false;
+      }, function errorCallback(response) {
+        $scope.loading = false;
+        $scope.error = response;
+      });
+    }
+    $scope.loadSources();
 
     // error info helpers.
     $scope.ec = function(){
