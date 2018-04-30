@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"time"
+	"os"
 )
 
 // source kinds.
@@ -185,4 +186,25 @@ func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	}
 
 	return output, nil
+}
+
+
+// GetSource returns a source.
+func GetSource(ctx context.Context, uid int, db *sql.DB) (*Source, error) {
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res, err := db.QueryContext(ctx, `
+		SELECT rowid, kind, created_at, updated_at, url, ranking_priority, tag, metadata FROM sources WHERE rowid = ?;
+	`, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	if !res.Next() {
+		return nil, os.ErrNotExist
+	}
+	var o Source
+	return &o, res.Scan(&o.UID, &o.Kind, &o.CreatedAt, &o.UpdatedAt, &o.URL, &o.Rank, &o.Tag, &o.Metadata)
 }

@@ -52,6 +52,9 @@ type Footprint struct {
 	PinCount int    `json:"pin_count"`
 	Attr     string `json:"attr"`
 	Tags     string `json:"tags"`
+
+	// Not stored in DB
+	Rank int `json:"rank,omitempty"`
 }
 
 // MakeFootprintURL creates a pretty URL for the footprint.
