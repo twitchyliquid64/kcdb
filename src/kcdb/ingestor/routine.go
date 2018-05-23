@@ -64,6 +64,7 @@ func doIngest() error {
 			}
 			url := db.MakeFootprintURL(current.URL, path[len(tmpDir)+1:])
 
+			//fmt.Printf("File: %+v\n", path)
 			footprint, err := mod.DecodeModule(strings.NewReader(string(b)))
 			if err != nil {
 				fmt.Printf("[ingest][footprint] Failed parsing %q: %v\n", path, err)

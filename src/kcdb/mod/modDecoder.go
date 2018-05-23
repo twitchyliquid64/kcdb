@@ -330,6 +330,9 @@ func unmarshalFpText(n sexp.Helper) (FpText, error) {
 		case "effects":
 			s := n.Child(x).Child(1)
 			for i := 1; i < s.MustNode().NumChildren(); i++ {
+				if !s.Child(i).Child(0).IsScalar() {
+					continue
+				}
 				switch s.Child(i).Child(0).MustString() {
 				case "size":
 					txt.Size = Point2D{X: s.Child(i).Child(1).MustFloat64(), Y: s.Child(i).Child(2).MustFloat64()}
