@@ -1,26 +1,30 @@
 KiCad Database
 ===============
 
-KCDB ingests github repositories, indexing `.kicad_mod` files so they can be searched and viewed via an easy web interface.
+KCDB ingests github repositories, indexing `.kicad_mod` files into an on-disk database, so they can be searched and viewed via an easy web interface.
 
-This code powers `https://kcdb.ciphersink.net`.
+This code powers [https://kcdb.ciphersink.net](https://kcdb.ciphersink.net).
 
 *Installation*
 
-Ensure you have  Go 1.10 installed.
+Ensure you have  [Go 1.10](https://golang.org/dl/) (or greater) installed and a C compiler on your system.
 
 ```shell
 git clone <this repo>
 cd <this repo>
 export GOPATH=`pwd`
 go build -o kcdb kcdb.go
-./kcdb --listener :80 #stores database in ./kc.db
 ```
 
 *Manually adding sources*
 
 `./kcdb add-git-source https://github.com/.../...`
 
+*Run kcdb*
+
+```shell
+./kcdb --listener :80 #stores database in ./kc.db
+```
 
 *Legal*
 
