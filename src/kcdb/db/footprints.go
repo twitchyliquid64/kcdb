@@ -183,7 +183,7 @@ func FootprintSearch(ctx context.Context, search FpSearchParam, db *sql.DB) ([]*
 	dbLock.RLock()
 	defer dbLock.RUnlock()
 
-	res, err := db.QueryContext(ctx, "SELECT rowid, source_id, updated_at, url, name, pin_count, attr, tags FROM footprints WHERE "+where+" LIMIT 50;", params...)
+	res, err := db.QueryContext(ctx, "SELECT rowid, source_id, updated_at, url, name, pin_count, attr, tags FROM footprints WHERE "+where+" LIMIT 65;", params...)
 	if err != nil {
 		return nil, err
 	}

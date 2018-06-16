@@ -22,7 +22,7 @@ func rank(ctx context.Context, fps []*db.Footprint) ([]*db.Footprint, error) {
 		if err != nil {
 			return nil, err
 		}
-		fp.Rank = src.Rank
+		fp.Rank = -src.Rank
 	}
 	s = byRank(fps)
 	sort.Sort(s)
