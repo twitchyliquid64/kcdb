@@ -3,8 +3,9 @@ package db
 import (
 	"context"
 	"database/sql"
-	"time"
+	"fmt"
 	"os"
+	"time"
 )
 
 // source kinds.
@@ -78,7 +79,7 @@ type Source struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	URL       string    `json:"url"`
-	Rank 			int				`json:"rank"`
+	Rank      int       `json:"rank"`
 	Tag       string    `json:"tag"`
 	Metadata  string    `json:"metadata"`
 }
@@ -188,7 +189,6 @@ func GetSources(ctx context.Context, db *sql.DB) ([]*Source, error) {
 	return output, nil
 }
 
-
 // GetSource returns a source.
 func GetSource(ctx context.Context, uid int, db *sql.DB) (*Source, error) {
 	dbLock.RLock()
@@ -203,6 +203,7 @@ func GetSource(ctx context.Context, uid int, db *sql.DB) (*Source, error) {
 	defer res.Close()
 
 	if !res.Next() {
+		fmt.Printf("Failed to find source with UID %v\n", uid)
 		return nil, os.ErrNotExist
 	}
 	var o Source

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -185,6 +186,7 @@ func FootprintSearch(ctx context.Context, search FpSearchParam, db *sql.DB) ([]*
 
 	res, err := db.QueryContext(ctx, "SELECT rowid, source_id, updated_at, url, name, pin_count, attr, tags FROM footprints WHERE "+where+" LIMIT 65;", params...)
 	if err != nil {
+		fmt.Printf("db.QueryContext(%q) failed: %v\n", "... WHERE "+where, err)
 		return nil, err
 	}
 	defer res.Close()
@@ -193,6 +195,7 @@ func FootprintSearch(ctx context.Context, search FpSearchParam, db *sql.DB) ([]*
 	for res.Next() {
 		var fp Footprint
 		if err := res.Scan(&fp.UID, &fp.SourceID, &fp.UpdatedAt, &fp.URL, &fp.Name, &fp.PinCount, &fp.Attr, &fp.Tags); err != nil {
+			fmt.Printf("db.Scan(%q) failed: %v\n", "... WHERE "+where, err)
 			return nil, err
 		}
 		out = append(out, &fp)

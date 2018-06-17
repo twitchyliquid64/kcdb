@@ -28,14 +28,14 @@ func SearchHandler(w http.ResponseWriter, req *http.Request) {
 	results, err := search.Search(req.Context(), query.Query)
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
-		fmt.Printf("Err: %v\n", err)
+		fmt.Printf("Search err: %v\n", err)
 		return
 	}
 
 	b, err := json.Marshal(results)
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
-		fmt.Printf("Err: %v\n", err)
+		fmt.Printf("Marshal err: %v\n", err)
 		return
 	}
 

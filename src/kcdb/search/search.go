@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kcdb/db"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,7 +21,12 @@ func rank(ctx context.Context, fps []*db.Footprint) ([]*db.Footprint, error) {
 	for _, fp := range fps {
 		src, err := getSource(ctx, fp.SourceID)
 		if err != nil {
-			return nil, err
+			if err == os.ErrNotExist {
+				//TODO: We should fix the data inconsistency instead.
+				src = &db.Source{Rank: -200}
+			} else {
+				return nil, err
+			}
 		}
 		fp.Rank = -src.Rank
 	}
