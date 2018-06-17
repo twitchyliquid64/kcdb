@@ -98,7 +98,7 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
     $scope.searchQ = '';
     $scope.hasSearched = false;
     if ($scope.queryFromURL) {
-      $scope.searchQ = $scope.queryFromURL;
+      $scope.searchQ = $scope.queryFromURL.replace(/\+/g, ' ');
       $scope.hasSearched = true;
       document.getElementById("searchInput").focus();
     }
