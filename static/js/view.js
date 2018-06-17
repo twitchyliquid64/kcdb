@@ -1,9 +1,10 @@
 
-app.controller('ViewController', ["$scope", "$rootScope", "$http", function ($scope, $rootScope, $http) {
+app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", function ($scope, $rootScope, $http, $window) {
   $scope.loading = false;
   $scope.last_modified = null;
   $scope.module = {};
   $scope.path = window.location.pathname.substring('/footprint/'.length);
+  $scope.query = parseLocation($window.location.search)['query'];
 
   $scope.canvas = document.getElementById('partsCanvas');
   $scope.canvas.style.width ='100%';

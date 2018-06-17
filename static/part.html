@@ -36,20 +36,20 @@
     <script type="text/javascript" src="/js/view.js"></script>
 
 </head>
-<body ng-app="kcdb" ng-cloak>
+<body ng-app="kcdb" ng-cloak ng-controller="ViewController">
 
   <nav class="blue darken-4" role="navigation">
     <div class="nav-wrapper">
       <a id="logo-container" href="#" class="brand-logo"><i class="material-icons">memory</i> <b>KiCad Component DB</b></a>
       <ul class="right hide-on-med-and-down">
-        <li><a href="/"><i class="material-icons">exit_to_app</i></a></li>
+        <li><a href="/?query={{query}}"><i class="material-icons">exit_to_app</i></a></li>
       </ul>
     </div>
   </nav>
 
     <div>
 
-      <div class="section" style="padding: 6px 15px;" ng-controller="ViewController">
+      <div class="section" style="padding: 6px 15px;">
         <div class="loader"><div ng-show="loading" class="progress"><div class="indeterminate"></div></div></div>
         <h4><b>Part view</b></h4>
         <blockquote ng-show="error"><h5>Error</h5>

@@ -116,7 +116,7 @@
               <tbody>
                 <tr ng-repeat="r in results">
                   <td>
-                    <a href="/footprint/{{r.url}}?fpid={{r.uid}}">{{r.name}}</a>
+                    <a href="/footprint/{{r.url}}?fpid={{r.uid}}&query={{searchQ | escape}}">{{r.name}}</a>
                     <span ng-if="showTag(r.source_uid)" class="tag-source tag-secondary">{{sources[r.source_uid].tag}}</span>
                   </td>
                   <td ng-bind="r.attr"></td>

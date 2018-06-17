@@ -8,6 +8,28 @@ app.controller('BodyController', ["$scope", "$rootScope", function ($scope, $roo
     };
 }]);
 
+app.filter('escape', function() {
+  return window.encodeURIComponent;
+});
+
+function parseLocation(location) {
+    var pairs = location.substring(1).split("&");
+    var obj = {};
+    var pair;
+    var i;
+
+    for (i in pairs) {
+        if (pairs[i] === "")
+            continue;
+
+        pair = pairs[i].split("=");
+        obj[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+    }
+
+    return obj;
+}
+
+
 app.controller('SourcesController', ["$scope", "$http", "$rootScope", "$interval", function ($scope, $http, $rootScope, $interval) {
     $scope.loading = false;
     $scope.sources = [];
@@ -68,12 +90,18 @@ app.controller('SourcesController', ["$scope", "$http", "$rootScope", "$interval
 }]);
 
 
-app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval", function ($scope, $http, $rootScope, $interval) {
+app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval", "$window", function ($scope, $http, $rootScope, $interval, $window) {
     $scope.loading = false;
     $scope.results = [];
     $scope.sources = {};
+    $scope.queryFromURL = parseLocation($window.location.search)['query'];
     $scope.searchQ = '';
     $scope.hasSearched = false;
+    if ($scope.queryFromURL) {
+      $scope.searchQ = $scope.queryFromURL;
+      $scope.hasSearched = true;
+      document.getElementById("searchInput").focus();
+    }
 
     $scope.search = function(query){
       $scope.hasSearched = true;
@@ -98,7 +126,7 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
 
     $scope.loadSources = function(){
       $scope.loading = true;
-      $http({
+      return $http({
         method: 'GET',
         url: '/sources/all',
       }).then(function successCallback(response) {
@@ -111,7 +139,10 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
         $scope.error = response;
       });
     }
-    $scope.loadSources();
+    $scope.loadSources().then(function(){
+      if ($scope.queryFromURL)
+        $scope.search($scope.searchQ);
+    });
 
     // error info helpers.
     $scope.ec = function(){
