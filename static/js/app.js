@@ -73,8 +73,10 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
     $scope.results = [];
     $scope.sources = {};
     $scope.searchQ = '';
+    $scope.hasSearched = false;
 
     $scope.search = function(query){
+      $scope.hasSearched = true;
       $scope.loading = true;
       $scope.error = null;
       $http({

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/materialize.min.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/general.css">
+    <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
 
     <style type="text/css">
     /**
@@ -32,9 +33,9 @@
 </head>
 <body ng-app="kcdb" ng-controller="BodyController" ng-cloak>
 
-  <nav class="blue darken-3" role="navigation">
+  <nav class="blue darken-4" role="navigation">
     <div class="nav-wrapper">
-      <a id="logo-container" href="#" class="brand-logo"><i class="material-icons">memory</i> KiCad Component DB</a>
+      <a id="logo-container" href="#" class="brand-logo"><i class="material-icons">memory</i> <b>KiCad Component DB</b></a>
       <ul class="right hide-on-med-and-down">
         <li ng-class="{active: page == 'search'}"><a ng-click="changePage('search')"><i class="material-icons">search</i></a></li>
         <li ng-class="{active: page == 'sources'}"><a ng-click="changePage('sources')"><i class="material-icons">cloud_download</i></a></li>
@@ -71,6 +72,35 @@
             </div>
           </div>
 
+          <div class="section blue-grey lighten-4" ng-show="!hasSearched" style="border-radius: 4px; margin: 45px; font-size: 115%; border-color: #212121; border-style: solid; border-width: 1px;">
+
+            <div class="section container">
+              <h4><b>Welcome to the unofficial KiCad part database!</b></h4>
+              <p>Enter space-separated keywords in the search box above to search our index.</p>
+              <div class="section">
+                <h5><b>Examples</b></h5>
+                  SOT-23 pin_count=3 attr=smd<br>
+                  WS2812b
+              </div>
+
+              <div class="section">
+                <h5><b>Special keywords</b></h5>
+                <ul>
+                  <li><b>pin_count=? / pinc=?</b> - Filter parts to those which have a specific number of pins.</li>
+                </ul>
+              </div>
+
+              <div class="section">
+                <h5><b>Suggestions?</b></h5>
+                <p>Submit code or ideas to our <a href="https://github.com/twitchyliquid64/kcdb" target="_blank">Github</a>.</p>
+                <p>
+                  <h5><b>Also please love me on twitter <i class="em em-heart_eyes"></i></b></h5>
+                  <a href="https://twitter.com/twitchyliquid64?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="false">Follow @twitchyliquid64</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div ng-show="results.length">
             <table>
               <thead>
@@ -101,7 +131,7 @@
       <div ng-show="page=='sources'" ng-controller="SourcesController">
         <div class="loader"><div ng-show="loading" class="progress"><div class="indeterminate"></div></div></div>
         <div class="section" style="padding: 0px 15px;">
-          <h4>Sources</h4>
+          <h4><b>Sources</b></h4>
 
           <div ng-show="ingest_status">
             <p>The ingestor is scheduled to enumerate the next repository
