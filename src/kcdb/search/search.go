@@ -35,6 +35,15 @@ func rank(ctx context.Context, fps []*db.Footprint) ([]*db.Footprint, error) {
 	return s, nil
 }
 
+// ErrBadQuery is returned if the user doesnt know how to search.
+type ErrBadQuery struct {
+	msg string
+}
+
+func (e ErrBadQuery) Error() string {
+	return e.msg
+}
+
 // Search returns search results.
 func Search(ctx context.Context, q string) ([]*db.Footprint, error) {
 	var params db.FpSearchParam
@@ -57,6 +66,10 @@ func Search(ctx context.Context, q string) ([]*db.Footprint, error) {
 		} else {
 			params.Keywords = append(params.Keywords, token)
 		}
+	}
+
+	if len(params.Keywords) == 0 {
+		return nil, ErrBadQuery{msg: "Keywords must be specified"}
 	}
 
 	fps, err := db.FootprintSearch(ctx, params, db.DB())

@@ -27,6 +27,10 @@ func SearchHandler(w http.ResponseWriter, req *http.Request) {
 
 	results, err := search.Search(req.Context(), query.Query)
 	if err != nil {
+		if _, badQuery := err.(search.ErrBadQuery); badQuery {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		fmt.Printf("Search err: %v\n", err)
 		return
