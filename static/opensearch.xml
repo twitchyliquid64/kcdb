@@ -1,0 +1,8 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+<ShortName>KiCad Component DB</ShortName>
+<Description>
+Search engine for KiCad Footprints
+</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Url type="text/html" method="get" template="https://kcdb.ciphersink.net/?query={searchTerms}"/>
+</OpenSearchDescription>
