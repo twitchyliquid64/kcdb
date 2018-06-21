@@ -18,6 +18,8 @@ type Symbol struct {
 	ShowNames bool
 
 	Fields []SymbolFieldLine
+
+	RawData string
 }
 
 // SymbolFieldLine represents a data field on a symbol.
@@ -68,6 +70,7 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 		if err != nil {
 			break
 		}
+		line = strings.Replace(line, "\n", "", -1)
 
 		if strings.HasPrefix(line, "DEF ") && parseState == parseStateNone {
 			spl := strings.Split(line, " ")
@@ -85,6 +88,7 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			p.ShowNames = spl[6] == "Y"
 			parts = append(parts, &p)
 			parseState = parseStateDEF
+			p.RawData = line + "\n"
 		} else if strings.HasPrefix(line, "F") && parseState == parseStateDEF {
 			spl := strings.Split(line, " ")
 			if len(spl) < 9 {
@@ -114,8 +118,10 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			d.IsHorizontal = spl[5] == "H"
 			d.IsHidden = spl[6] == "I"
 			parts[len(parts)-1].Fields = append(parts[len(parts)-1].Fields, d)
+			parts[len(parts)-1].RawData += line + "\n"
 		} else if strings.HasPrefix(line, "ENDDEF") && parseState == parseStateDEF {
 			parseState = parseStateNone
+			parts[len(parts)-1].RawData += line
 		}
 	}
 	if err == io.EOF {

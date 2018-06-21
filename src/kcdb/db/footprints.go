@@ -58,8 +58,8 @@ type Footprint struct {
 	Rank int `json:"rank,omitempty"`
 }
 
-// MakeFootprintURL creates a pretty URL for the footprint.
-func MakeFootprintURL(repoURL, repoPath string) string {
+// MakePartURL creates a pretty URL for the footprint.
+func MakePartURL(repoURL, repoPath string) string {
 	if repoURL[len(repoURL)-1] == '/' {
 		repoURL = repoURL[:len(repoURL)-2]
 	}

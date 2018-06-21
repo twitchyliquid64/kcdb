@@ -1,11 +1,13 @@
 package ingestor
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"kcdb/db"
 	"kcdb/mod"
+	"kcdb/sym"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,7 +64,7 @@ func doIngest() error {
 			if err != nil {
 				return err
 			}
-			url := db.MakeFootprintURL(current.URL, path[len(tmpDir)+1:])
+			url := db.MakePartURL(current.URL, path[len(tmpDir)+1:])
 
 			//fmt.Printf("File: %+v\n", path)
 			footprint, err := mod.DecodeModule(strings.NewReader(string(b)))
@@ -78,7 +80,28 @@ func doIngest() error {
 			}
 
 			//fmt.Printf("[ingest][footprint] Successfully parsed %s\n", footprint.Name)
+		} else if strings.HasSuffix(path, ".lib") {
+			b, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			url := db.MakePartURL(current.URL, path[len(tmpDir)+1:])
+
+			symbols, err := sym.DecodeSymbolLibrary(bytes.NewBuffer(b))
+			if err != nil {
+				fmt.Printf("[ingest][symbols] Failed parsing %q: %v\n", path, err)
+				// fmt.Println(string(b))
+				return nil
+			}
+
+			for i := range symbols {
+				_, err = upsertSymbol(current, url+"::"+symbols[i].Name, []byte(symbols[i].RawData), symbols[i])
+				if err != nil {
+					return err
+				}
+			}
 		}
+
 		return nil
 	})
 
@@ -113,5 +136,43 @@ func upsertFootprint(source *db.Source, url string, b []byte, fp *mod.Module) (i
 		Name:     fp.Name,
 		Attr:     strings.Join(fp.Attrs, ","),
 		Tags:     strings.Join(fp.Tags, ","),
+	}, db.DB())
+}
+
+func upsertSymbol(source *db.Source, url string, b []byte, s *sym.Symbol) (int, error) {
+	ctx := context.Background()
+	exists, uid, err := db.SymbolExists(ctx, url, db.DB())
+	if err != nil {
+		return 0, err
+	}
+
+	fieldData := ""
+	for i := range s.Fields {
+		if s.Fields[i].Value == "" {
+			continue
+		}
+		fieldData += s.Fields[i].Value
+		if i < (len(s.Fields) - 1) {
+			fieldData += " "
+		}
+	}
+
+	if exists {
+		return uid, db.UpdateSymbol(ctx, &db.Symbol{
+			UID:       uid,
+			Data:      b,
+			URL:       url,
+			SourceID:  source.UID,
+			Name:      s.Name,
+			FieldData: fieldData,
+		}, db.DB())
+	}
+	return db.CreateSymbol(ctx, &db.Symbol{
+		UID:       uid,
+		Data:      b,
+		URL:       url,
+		SourceID:  source.UID,
+		Name:      s.Name,
+		FieldData: fieldData,
 	}, db.DB())
 }

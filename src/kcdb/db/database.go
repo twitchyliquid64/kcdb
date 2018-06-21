@@ -21,6 +21,7 @@ type DatabaseTable interface {
 var tables = []DatabaseTable{
 	&SourceTable{},
 	&FootprintTable{},
+	&SymbolTable{},
 }
 
 // Init is called with database information to initialise a database session, creating any necessary tables.
