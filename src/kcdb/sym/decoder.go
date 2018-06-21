@@ -2,6 +2,7 @@ package sym
 
 import (
 	"bufio"
+	"encoding/csv"
 	"errors"
 	"io"
 	"strconv"
@@ -73,7 +74,10 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 		line = strings.Replace(line, "\n", "", -1)
 
 		if strings.HasPrefix(line, "DEF ") && parseState == parseStateNone {
-			spl := strings.Split(line, " ")
+			spl, err := spaceSplit(line)
+			if err != nil {
+				return nil, err
+			}
 			if len(spl) < 7 {
 				return nil, errors.New("missing tokens on DEF line")
 			}
@@ -90,7 +94,10 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			parseState = parseStateDEF
 			p.RawData = line + "\n"
 		} else if strings.HasPrefix(line, "F") && parseState == parseStateDEF {
-			spl := strings.Split(line, " ")
+			spl, err := spaceSplit(line)
+			if err != nil {
+				return nil, err
+			}
 			if len(spl) < 9 {
 				return nil, errors.New("missing tokens on field line")
 			}
@@ -99,10 +106,7 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			if err != nil {
 				return nil, err
 			}
-			d.Value, err = strconv.Unquote(spl[1])
-			if err != nil {
-				return nil, err
-			}
+			d.Value = spl[1]
 			d.X, err = strconv.Atoi(spl[2])
 			if err != nil {
 				return nil, err
@@ -128,4 +132,10 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 		return parts, nil
 	}
 	return nil, err
+}
+
+func spaceSplit(line string) ([]string, error) {
+	r := csv.NewReader(strings.NewReader(line))
+	r.Comma = ' ' // space
+	return r.Read()
 }
