@@ -25,6 +25,8 @@ X GND 3 550 -150 300 L 50 50 1 1 W
 X DIN 4 -550 -250 300 R 50 50 1 1 I
 ENDDRAW
 ENDDEF
+DEF kek U 0 40 Y Y 1 F N
+ENDDEF
 #
 #End Library`)
 
@@ -33,8 +35,8 @@ ENDDEF
 		t.Fatal(err)
 	}
 
-	if len(parts) != 1 {
-		t.Fatalf("Got %d parts, expected 1", len(parts))
+	if len(parts) != 2 {
+		t.Fatalf("Got %d parts, expected 2", len(parts))
 	}
 
 	if parts[0].Name != "WS2812B" {

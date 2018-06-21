@@ -114,6 +114,8 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			d.IsHorizontal = spl[5] == "H"
 			d.IsHidden = spl[6] == "I"
 			parts[len(parts)-1].Fields = append(parts[len(parts)-1].Fields, d)
+		} else if strings.HasPrefix(line, "ENDDEF") && parseState == parseStateDEF {
+			parseState = parseStateNone
 		}
 	}
 	if err == io.EOF {
