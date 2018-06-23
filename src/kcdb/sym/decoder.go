@@ -19,6 +19,7 @@ type Symbol struct {
 	ShowNames bool
 
 	Fields []SymbolFieldLine
+	Pins   []Pin
 
 	RawData string
 }
@@ -32,6 +33,15 @@ type SymbolFieldLine struct {
 	Size         int
 	IsHorizontal bool
 	IsHidden     bool
+}
+
+// Pin represents a pin draw line.
+type Pin struct {
+	Name        string
+	Number      string
+	X           int
+	Y           int
+	Orientation string
 }
 
 // DecodeSymbolLibrary decodes an encoded representation of symbols.
@@ -123,6 +133,34 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			d.IsHidden = spl[6] == "I"
 			parts[len(parts)-1].Fields = append(parts[len(parts)-1].Fields, d)
 			parts[len(parts)-1].RawData += line + "\n"
+		} else if strings.HasPrefix(line, "DRAW") && parseState == parseStateDEF {
+			parseState = parseStateDRAW
+			parts[len(parts)-1].RawData += line
+		} else if strings.HasPrefix(line, "X ") && parseState == parseStateDRAW {
+			spl, err := spaceSplit(line)
+			if err != nil {
+				return nil, err
+			}
+			if len(spl) < 10 {
+				return nil, errors.New("missing tokens on pin line")
+			}
+			var p Pin
+			p.Name = spl[1]
+			p.Number = spl[2]
+			p.X, err = strconv.Atoi(spl[3])
+			if err != nil {
+				return nil, err
+			}
+			p.Y, err = strconv.Atoi(spl[4])
+			if err != nil {
+				return nil, err
+			}
+			p.Orientation = spl[6]
+			parts[len(parts)-1].Pins = append(parts[len(parts)-1].Pins, p)
+			parts[len(parts)-1].RawData += line
+		} else if strings.HasPrefix(line, "ENDDRAW") && parseState == parseStateDRAW {
+			parseState = parseStateDEF
+			parts[len(parts)-1].RawData += line
 		} else if strings.HasPrefix(line, "ENDDEF") && parseState == parseStateDEF {
 			parseState = parseStateNone
 			parts[len(parts)-1].RawData += line
