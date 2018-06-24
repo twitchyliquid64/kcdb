@@ -135,7 +135,7 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			parts[len(parts)-1].RawData += line + "\n"
 		} else if strings.HasPrefix(line, "DRAW") && parseState == parseStateDEF {
 			parseState = parseStateDRAW
-			parts[len(parts)-1].RawData += line
+			parts[len(parts)-1].RawData += line + "\n"
 		} else if strings.HasPrefix(line, "X ") && parseState == parseStateDRAW {
 			spl, err := spaceSplit(line)
 			if err != nil {
@@ -157,10 +157,10 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 			}
 			p.Orientation = spl[6]
 			parts[len(parts)-1].Pins = append(parts[len(parts)-1].Pins, p)
-			parts[len(parts)-1].RawData += line
+			parts[len(parts)-1].RawData += line + "\n"
 		} else if strings.HasPrefix(line, "ENDDRAW") && parseState == parseStateDRAW {
 			parseState = parseStateDEF
-			parts[len(parts)-1].RawData += line
+			parts[len(parts)-1].RawData += line + "\n"
 		} else if strings.HasPrefix(line, "ENDDEF") && parseState == parseStateDEF {
 			parseState = parseStateNone
 			parts[len(parts)-1].RawData += line

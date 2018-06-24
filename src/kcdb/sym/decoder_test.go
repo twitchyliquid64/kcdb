@@ -64,4 +64,21 @@ ENDDEF
 	if parts[0].Fields[1].Value != "WS2812B" {
 		t.Errorf("Expected field kind to be WS2812B, got %s", parts[0].Fields[1].Value)
 	}
+
+	expectedRawData := `DEF WS2812B U 0 40 Y Y 1 F N
+F0 "U" 0 100 60 H V C CNN
+F1 "WS2812B" 0 0 60 H V C CNN
+F2 "~" 0 0 60 H V C CNN
+F3 "~" 0 0 60 H V C CNN
+DRAW
+X VDD 1 -550 -150 300 R 50 50 1 1 W
+X DOUT 2 550 -250 300 L 50 50 1 1 O
+X GND 3 550 -150 300 L 50 50 1 1 W
+X DIN 4 -550 -250 300 R 50 50 1 1 I
+ENDDRAW
+ENDDEF`
+
+	if parts[0].RawData != expectedRawData {
+		t.Errorf("Expected RawData=%q, got %q.", expectedRawData, parts[0].RawData)
+	}
 }
