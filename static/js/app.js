@@ -92,6 +92,7 @@ app.controller('SourcesController', ["$scope", "$http", "$rootScope", "$interval
 
 app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval", "$window", function ($scope, $http, $rootScope, $interval, $window) {
     $scope.loading = false;
+    $scope.symbolSearch = false;
     $scope.results = [];
     $scope.sources = {};
     $scope.queryFromURL = parseLocation($window.location.search)['query'];
@@ -110,7 +111,7 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
       $http({
         method: 'POST',
         url: '/search/all',
-        data: {query: $scope.searchQ},
+        data: {query: $scope.searchQ, symbolsOnly: $scope.symbolSearch},
       }).then(function successCallback(response) {
         $scope.results = response.data;
         $scope.loading = false;
@@ -122,6 +123,12 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
 
     $scope.showTag = function(source_uid) {
       return !!$scope.sources[source_uid].tag;
+    }
+
+    $scope.typeToggled = function(){
+      $scope.results = [];
+      if ($scope.symbolSearch)
+        Materialize.toast('Searching by Symbol is not yet supported! Sorry :(', 4500);
     }
 
     $scope.loadSources = function(){
@@ -159,4 +166,11 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
         return 'The server encountered a problem handling the request';
       return $scope.error.statusText;
     }
+}]);
+
+app.controller('SymbolViewController', ["$scope", "$rootScope", "$http", "$window", function ($scope, $rootScope, $http, $window) {
+  $scope.loading = false;
+  $scope.last_modified = null;
+  $scope.module = {};
+  $scope.path = window.location.pathname.substring('/footprint/'.length);
 }]);

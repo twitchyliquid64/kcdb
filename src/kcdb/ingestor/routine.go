@@ -157,6 +157,17 @@ func upsertSymbol(source *db.Source, url string, b []byte, s *sym.Symbol) (int, 
 		}
 	}
 
+	pinData := ""
+	for i := range s.Pins {
+		if s.Pins[i].Name == "" {
+			continue
+		}
+		pinData += s.Pins[i].Name
+		if i < (len(s.Pins) - 1) {
+			pinData += " "
+		}
+	}
+
 	if exists {
 		return uid, db.UpdateSymbol(ctx, &db.Symbol{
 			UID:       uid,
@@ -165,6 +176,8 @@ func upsertSymbol(source *db.Source, url string, b []byte, s *sym.Symbol) (int, 
 			SourceID:  source.UID,
 			Name:      s.Name,
 			FieldData: fieldData,
+			PinCount:  len(s.Pins),
+			PinData:   pinData,
 		}, db.DB())
 	}
 	return db.CreateSymbol(ctx, &db.Symbol{
@@ -174,5 +187,7 @@ func upsertSymbol(source *db.Source, url string, b []byte, s *sym.Symbol) (int, 
 		SourceID:  source.UID,
 		Name:      s.Name,
 		FieldData: fieldData,
+		PinCount:  len(s.Pins),
+		PinData:   pinData,
 	}, db.DB())
 }

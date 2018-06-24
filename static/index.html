@@ -65,10 +65,22 @@
         <div class="section" style="padding: 0px 15px;">
           <div class="fields-container">
             <div class="row" style="margin-bottom: 2px;">
-              <div class="input-field col s12">
+              <div class="input-field col s8">
                 <i class="material-icons prefix">search</i>
                 <input id="searchInput" type="text" ng-model="searchQ" placeholder="try 'SOT-23 pin_count=3'"
                        ng-keyup="$event.keyCode == 13 && search(searchQ)" autofocus>
+              </div>
+              <div class="input-field col s1">
+              </div>
+              <div class="input-field col s3">
+                <div class="switch">
+                  <label>
+                    Footprints
+                    <input type="checkbox" ng-model="symbolSearch" ng-change="typeToggled();">
+                    <span class="lever"></span>
+                    Symbols
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -120,7 +132,8 @@
               <tbody>
                 <tr ng-repeat="r in results">
                   <td>
-                    <a href="/footprint/{{r.url}}?fpid={{r.uid}}&query={{searchQ | escape}}">{{r.name}}</a>
+                    <a ng-if="!symbolSearch" href="/footprint/{{r.url}}?fpid={{r.uid}}&query={{searchQ | escape}}">{{r.name}}</a>
+                    <a ng-if="symbolSearch" href="/symbol/{{r.url}}?fpid={{r.uid}}&query={{searchQ | escape}}&symbolSearch=yes">{{r.name}}</a>
                     <span ng-if="showTag(r.source_uid)" class="tag-source tag-secondary">{{sources[r.source_uid].tag}}</span>
                   </td>
                   <td ng-bind="r.attr"></td>

@@ -17,7 +17,8 @@ import (
 // SearchHandler performs a search.
 func SearchHandler(w http.ResponseWriter, req *http.Request) {
 	var query struct {
-		Query string `json:"query"`
+		Query        string `json:"query"`
+		SymbolsQuery bool   `json:"symbolsOnly"`
 	}
 	if err := json.NewDecoder(req.Body).Decode(&query); err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
@@ -25,7 +26,14 @@ func SearchHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	results, err := search.Search(req.Context(), query.Query)
+	var results interface{}
+	var err error
+
+	if query.SymbolsQuery {
+		results, err = search.SymbolSearch(req.Context(), query.Query)
+	} else {
+		results, err = search.Search(req.Context(), query.Query)
+	}
 	if err != nil {
 		if _, badQuery := err.(search.ErrBadQuery); badQuery {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -50,6 +58,20 @@ func SearchHandler(w http.ResponseWriter, req *http.Request) {
 // FootprintHandler serves the HTML for viewing a footprint
 func FootprintHandler(w http.ResponseWriter, req *http.Request) {
 	f, err := os.Open("static/part.html")
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
+	defer f.Close()
+
+	w.Header().Set("Content-Type", "text/html")
+	io.Copy(w, f)
+}
+
+// SymbolHandler serves the HTML for viewing a symbol
+func SymbolHandler(w http.ResponseWriter, req *http.Request) {
+	f, err := os.Open("static/part_symbol.html")
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		fmt.Printf("Err: %v\n", err)
