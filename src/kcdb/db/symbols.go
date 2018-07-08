@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+	"os"
 )
 
 // SymbolTable contains symbols.
@@ -144,6 +145,25 @@ func CreateSymbol(ctx context.Context, sym *Symbol, db *sql.DB) (int, error) {
 		return 0, err
 	}
 	return int(id), nil
+}
+
+// SymbolByURL returns the specified symbol
+func SymbolByURL(ctx context.Context, url string, db *sql.DB) (*Symbol, error) {
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res, err := db.QueryContext(ctx, `
+    SELECT rowid, source_id, updated_at, url, data, name, condensed_fields, pin_count, condensed_pins FROM symbols WHERE url = ?;
+  `, url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+	if !res.Next() {
+		return nil, os.ErrNotExist
+	}
+	var s Symbol
+	return &s, res.Scan(&s.UID, &s.SourceID, &s.UpdatedAt, &s.URL, &s.Data, &s.Name, &s.FieldData, &s.PinCount, &s.PinData)
 }
 
 // SymSearchParam specifies parameters to constrain a symbol search.

@@ -11,6 +11,7 @@ import (
 	"kcdb/db"
 	"kcdb/ingestor"
 	"kcdb/mod"
+	"kcdb/sym"
 	"kcdb/search"
 )
 
@@ -81,6 +82,42 @@ func SymbolHandler(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	io.Copy(w, f)
+}
+
+// SymbolDetails replies with a JSON blob representing the Symbol.
+func SymbolDetails(w http.ResponseWriter, req *http.Request) {
+	var raw []byte
+	if strings.HasPrefix(req.URL.Path, "/sym/details/") {
+		fp, err := db.SymbolByURL(req.Context(), req.URL.Path[len("/sym/details/"):], db.DB())
+		if err != nil {
+			if err == os.ErrNotExist {
+				http.Error(w, "Not Found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+			}
+			fmt.Printf("Err: %v\n", err)
+			return
+		}
+		raw = fp.Data
+	} else {
+		http.Error(w, "The request did not indicate what symbol should be returned", http.StatusBadRequest)
+		return
+	}
+	mod, err := sym.DecodeSymbolLibrary(strings.NewReader("EESchema-LIBRARY Version 2.KEK\n" + string(raw)))
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
+	b, err := json.Marshal(mod)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		fmt.Printf("Err: %v\n", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
 }
 
 // ModuleDetails replies with a JSON blob representing the Module.

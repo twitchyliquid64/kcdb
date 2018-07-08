@@ -61,48 +61,47 @@
 
         <div class="row">
           <div class="col s8">
+            <div class="row">
+              <h5>Pins</h5>
+              <table>
+                <thead>
+                  <tr>
+                      <th>Name</th>
+                      <th>Number</th>
+                      <th>Orientation</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr ng-repeat="p in symbol.pins">
+                    <td ng-bind="p.name"></td>
+                    <td ng-bind="p.num"></td>
+                    <td ng-bind="p.orientation"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="col s4">
+            <div class="row input-field">
+              <div class="col s8">
+                <input id="symName" type="text" ng-model="symbol.name" disabled>
+                <label for="symName">Name</label>
+              </div>
+              <div class="col s4">
+                <input id="symRef" type="text" ng-model="symbol.reference" disabled>
+                <label for="symRef">Reference</label>
+              </div>
+            </div>
             <div class="row input-field">
               <div class="col s12">
-                <input id="modName" type="text" ng-model="module.name" disabled>
-                <label for="modName">Name</label>
+                <input id="symURL" type="text" ng-model="path" disabled>
+                <label for="symURL">KCDB URL</label>
               </div>
             </div>
-            <div class="row input-field">
-              <div class="col s4">
-                <input id="modLayer" type="text" ng-model="module.layer" disabled>
-                <label for="modLayer">Primary layer</label>
-              </div>
-              <div class="col s4">
-                <input id="pinCount" type="text" ng-model="module.pads.length" disabled>
-                <label for="pinCount">Pin count</label>
-              </div>
-              <div class="col s4">
-                <input id="modAttrs" type="text" ng-model="module.attrs" disabled>
-                <label for="modAttrs">Attributes</label>
-              </div>
-            </div>
-            <div class="row input-field">
-              <div class="col s12">
-                <input id="modTags" type="text" ng-model="module.tags" disabled>
-                <label for="modTags">Tags</label>
-              </div>
-            </div>
-            <div class="row input-field">
-              <div class="col s12">
-                <input id="modLastModified" type="text" ng-model="last_modified" disabled>
-                <label for="modLastModified">Last modified (Tedit)</label>
-              </div>
-            </div>
-            <div>
-              <a href="#!" class="waves-effect waves-light btn" ng-click="goto()"><i class="material-icons left">open_in_browser</i> Goto Part</a>
-            </div>
-            <div ng-show="module.arcs.length">
-              <blockquote><h5><i class="material-icons left">warning</i> Warnings</h5>
-                <ul class="collection">
-                  <li class="collection-item" ng-show="module.arcs.length"><b>Render omitted</b>: This footprint contains arcs, which are not currently supported.</li>
-                </ul>
-              </blockquote>
-            </div>
+
+            <a href="#!" class="waves-effect waves-light btn" ng-click="goto()"><i class="material-icons left">open_in_browser</i> Goto Part</a>
           </div>
         </div>
 

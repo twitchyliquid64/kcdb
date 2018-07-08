@@ -171,6 +171,23 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
 app.controller('SymbolViewController', ["$scope", "$rootScope", "$http", "$window", function ($scope, $rootScope, $http, $window) {
   $scope.loading = false;
   $scope.last_modified = null;
-  $scope.module = {};
-  $scope.path = window.location.pathname.substring('/footprint/'.length);
+  $scope.symbol = {};
+  $scope.path = window.location.pathname.substring('/symbol/'.length);
+  $scope.query = parseLocation($window.location.search)['query'];
+
+  $scope.load = function(user){
+    $scope.loading = true;
+    $http({
+      method: 'GET',
+      url: '/sym/details/' + $scope.path,
+    }).then(function successCallback(response) {
+      $scope.symbol = response.data[0];
+      $scope.loading = false;
+    }, function errorCallback(response) {
+      $scope.loading = false;
+      $scope.error = response;
+    });
+  }
+
+  $scope.load();
 }]);

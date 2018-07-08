@@ -11,15 +11,15 @@ import (
 
 // Symbol represents a schematic symbol.
 type Symbol struct {
-	Name                 string
-	Reference            string
+	Name                 string `json:"name"`
+	Reference            string `json:"reference"`
 	ReferenceYOffsetMils int
 
-	ShowPins  bool
-	ShowNames bool
+	ShowPins  bool `json:"show_pins"`
+	ShowNames bool `json:"show_names"`
 
-	Fields []SymbolFieldLine
-	Pins   []Pin
+	Fields []SymbolFieldLine `json:"fields"`
+	Pins   []Pin `json:"pins"`
 
 	RawData string
 }
@@ -37,11 +37,11 @@ type SymbolFieldLine struct {
 
 // Pin represents a pin draw line.
 type Pin struct {
-	Name        string
-	Number      string
+	Name        string `json:"name"`
+	Number      string `json:"num"`
 	X           int
 	Y           int
-	Orientation string
+	Orientation string `json:"orientation"`
 }
 
 // DecodeSymbolLibrary decodes an encoded representation of symbols.

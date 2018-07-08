@@ -72,6 +72,7 @@ func initHandlers() {
 	http.HandleFunc("/module/details/", kcdb.ModuleDetails)
 	http.HandleFunc("/footprint/", kcdb.FootprintHandler)
 	http.HandleFunc("/symbol/", kcdb.SymbolHandler)
+	http.HandleFunc("/sym/details/", kcdb.SymbolDetails)
 	http.HandleFunc("/sources/all", kcdb.ListSources)
 	http.HandleFunc("/search/all", kcdb.SearchHandler)
 	http.HandleFunc("/ingestor/status", kcdb.IngestState)
