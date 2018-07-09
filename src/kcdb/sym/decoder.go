@@ -19,20 +19,20 @@ type Symbol struct {
 	ShowNames bool `json:"show_names"`
 
 	Fields []SymbolFieldLine `json:"fields"`
-	Pins   []Pin `json:"pins"`
+	Pins   []Pin             `json:"pins"`
 
-	RawData string
+	RawData string `json:"raw_data"`
 }
 
 // SymbolFieldLine represents a data field on a symbol.
 type SymbolFieldLine struct {
-	Kind         int
-	Value        string
+	Kind         int    `json:"kind"`
+	Value        string `json:"value"`
 	X            int
 	Y            int
 	Size         int
 	IsHorizontal bool
-	IsHidden     bool
+	IsHidden     bool `json:"is_hidden"`
 }
 
 // Pin represents a pin draw line.

@@ -128,7 +128,7 @@ app.controller('SearchController', ["$scope", "$http", "$rootScope", "$interval"
     $scope.typeToggled = function(){
       $scope.results = [];
       if ($scope.symbolSearch)
-        Materialize.toast('Searching by Symbol is not yet supported! Sorry :(', 4500);
+        Materialize.toast('The Symbols database is in Alpha, so its pretty rough. Please report any issues :)', 6500);
     }
 
     $scope.loadSources = function(){
