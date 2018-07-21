@@ -135,6 +135,8 @@ func DecodeModule(r io.RuneReader) (*Module, error) {
 		n := sexp.Help(mainAST).Child(i)
 		if n.IsList() && n.Child(1).IsValid() {
 			switch n.Child(0).MustString() {
+			case "zone_connect", "path", "autoplace_cost90", "autoplace_cost180":
+				// ignore
 			case "layer":
 				out.Layer, err = n.Child(1).String()
 				if err != nil {

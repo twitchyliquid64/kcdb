@@ -78,7 +78,7 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 
 	for {
 		line, err = r.ReadString('\n')
-		if err != nil {
+		if err != nil && line == "" {
 			break
 		}
 		line = strings.Replace(line, "\n", "", -1)
@@ -164,6 +164,14 @@ func decodeV2Library(r *bufio.Reader) ([]*Symbol, error) {
 		} else if strings.HasPrefix(line, "ENDDEF") && parseState == parseStateDEF {
 			parseState = parseStateNone
 			parts[len(parts)-1].RawData += line
+		} else if parseState == parseStateDRAW {
+			drawPrefixes := []string{"A", "C", "P", "S", "T", "B"}
+			for _, p := range drawPrefixes {
+				if strings.HasPrefix(line, p+" ") {
+					parts[len(parts)-1].RawData += line + "\n"
+					break
+				}
+			}
 		}
 	}
 	if err == io.EOF {
