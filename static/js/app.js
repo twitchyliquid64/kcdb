@@ -2,6 +2,7 @@ var app = angular.module('kcdb', ['ui.materialize', 'angularMoment']);
 
 app.controller('BodyController', ["$scope", "$rootScope", function ($scope, $rootScope) {
     $scope.page = "search";
+
     $scope.changePage = function(pageName){
         $scope.page = pageName;
         $rootScope.$broadcast('page-change', {page: pageName});

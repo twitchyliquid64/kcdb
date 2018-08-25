@@ -1,0 +1,123 @@
+<html>
+<head>
+    <title>RFBoi</title>
+
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="/css/material-icons.css">
+    <link rel="stylesheet" href="/css/materialize.min.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/general.css">
+
+    <style type="text/css">
+    /**
+     * Hide when Angular is not yet loaded and initialized
+     */
+    [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+      display: none !important;
+    }
+    </style>
+
+    <!-- JavaScript for: jQuery, angular, materialize, and angular-materialize. All of which are needed. -->
+    <script type="text/javascript" src="/js/libs/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="/js/libs/angular.min.js"></script>
+    <script type="text/javascript" src="/js/libs/moment.min.js"></script>
+    <script type="text/javascript" src="/js/libs/paper.js"></script>
+    <script type="text/javascript" src="/js/libs/materialize.min.js"></script>
+    <script type="text/javascript" src="/js/libs/angular-materialize.min.js"></script>
+
+
+    <!-- application initialization -->
+    <script type="text/javascript" src="js/paper.js"></script>
+    <script type="text/javascript" src="mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+
+</head>
+<body ng-app="rfboi" ng-controller="BodyController" ng-cloak>
+  <nav class="orange darken-4" role="navigation">
+    <div class="nav-wrapper">
+      <a id="logo-container" href="/" class="brand-logo"><i class="material-icons">settings_input_antenna</i> <b>RF Boi</b></a>
+      <ul class="right hide-on-med-and-down">
+        <li ng-class="{active: page == 'home'}"><a ng-click="changePage('home')"><i class="material-icons">home</i></a></li>
+      </ul>
+      <a data-activates="nav-mobile"  data-sidenav="left" data-menuwidth="500" data-closeonclick="true" class="button-collapse"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+
+  <ul id="nav-mobile" class="side-nav">
+    <li><a ng-click="changePage('home')">Home</a></li>
+  </ul>
+
+  <div ng-if="page=='home'">
+    <div class="section blue-grey lighten-4" style="border-radius: 4px; margin: 45px; font-size: 115%; border-color: #212121; border-style: solid; border-width: 1px;">
+      <div class="section container">
+        <h4><b>RF Boi - shortcut solvers for RF circuit design</b></h4>
+
+        <div class="section">
+          <p>
+            <a href="#rcfilters" ng-click="changePage('rc-filters')">RC Filters</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div ng-if="page=='rc-filters'" ng-controller="RcFilterController">
+    <div class="section">
+      <div class="section container">
+        <h5><b>RC Filters</b></h5>
+
+        <div class="row">
+          <div class="col s10">
+            <canvas id="rcFilter" width="650" height="400"></canvas>
+          </div>
+          <div class="col s2">
+            <p style="text-align:left">
+              `F"cutoff" = 1 / (2piRC) `
+            </p>
+            <br>
+            <p style="text-align:left">
+              `Z"out" = R ∥ Xc`
+              `Z"out" = R ∥ -1 / (2piFC)`
+            </p>
+          </div>
+        </div>
+
+
+        Calculate Frequency response:
+        <div class="row">
+          <form class="col s8">
+            <div class="row">
+              <div class="input-field col s6">
+                <input id="r_rcf" type="number" ng-model="R">
+                <label for="r_rcf">R (Ohms)</label>
+              </div>
+              <div class="input-field col s6">
+                <input id="c_rcf" type="number" ng-model="C">
+                <label for="c_rcf">C (pF)</label>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="row" ng-if="f3db">
+          <div class="col s8">
+            <table>
+              <thead>
+                <th>Calculation</th>
+                <th>Value</th>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>3dB point</td>
+                  <td>{{neatFrequency(f3db)}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
