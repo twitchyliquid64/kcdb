@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
-	//"io/ioutil"
 
 	"kcdb"
 	"kcdb/admin"
@@ -32,18 +33,66 @@ func main() {
 		os.Exit(1)
 	}
 
-	if flag.Arg(0) == "add-git-source" {
+	switch flag.Arg(0) {
+	case "add-git-source":
 		newGitSource(ctx, flag.Arg(1))
-		return
-	}
 
-	if err := ingestor.Start(*updateDelayFlag); err != nil {
-		fmt.Printf("Failed to setup ingestor: %v\n", err)
+	case "dump-sources":
+		dumpSources(ctx)
+
+	case "load-sources":
+		loadSources(ctx)
+
+	case "", "run":
+		if err := ingestor.Start(*updateDelayFlag); err != nil {
+			fmt.Printf("Failed to setup ingestor: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Now listening on %s\n", *listenerFlag)
+		makeServer().ListenAndServe()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown command %q\n", flag.Arg(0))
 		os.Exit(1)
 	}
+}
 
-	fmt.Printf("Now listening on %s\n", *listenerFlag)
-	makeServer().ListenAndServe()
+func dumpSources(ctx context.Context) {
+	s, err := db.GetSources(ctx, db.DB())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "GetSources() failed: %v\n", err)
+		os.Exit(1)
+	}
+	j, _ := json.MarshalIndent(s, "", "  ")
+	fmt.Println(string(j))
+}
+
+func loadSources(ctx context.Context) {
+	d, err := ioutil.ReadFile(flag.Arg(1))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ReadFile() failed: %v\n", err)
+		os.Exit(1)
+	}
+	var sources []db.Source
+	if err := json.Unmarshal(d, &sources); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to decode sources: %v\n", err)
+		os.Exit(1)
+	}
+	for _, source := range sources {
+		fmt.Printf("[%.3d] %s ... ", source.UID, source.URL)
+
+		s, err := db.GetSource(ctx, source.UID, db.DB())
+		if err == os.ErrNotExist || s.URL != source.URL {
+			if err := db.CreateSource(ctx, &source, db.DB()); err != nil {
+				fmt.Println("Err!\n\t" + err.Error())
+			} else {
+				fmt.Println("Created!")
+			}
+			continue
+		}
+
+		fmt.Println("Exists.")
+	}
 }
 
 func newGitSource(ctx context.Context, url string) {

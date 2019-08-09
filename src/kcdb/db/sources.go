@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"os"
 	"time"
 )
@@ -98,6 +97,26 @@ func AddSource(ctx context.Context, src *Source, db *sql.DB) error {
       sources (kind, url)
       VALUES (?, ?);`, src.Kind, src.URL)
 	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// CreateSource creates a new source, keeping the UID provided.
+func CreateSource(ctx context.Context, src *Source, db *sql.DB) error {
+	dbLock.Lock()
+	defer dbLock.Unlock()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	_, err = tx.ExecContext(ctx, `
+    INSERT INTO
+      sources (rowid, kind, url, created_at, updated_at, ranking_priority, tag, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?);`, src.UID, src.Kind, src.URL, src.CreatedAt, src.UpdatedAt, src.Rank, src.Tag, src.Metadata)
+	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	return tx.Commit()
@@ -203,7 +222,7 @@ func GetSource(ctx context.Context, uid int, db *sql.DB) (*Source, error) {
 	defer res.Close()
 
 	if !res.Next() {
-		fmt.Printf("Failed to find source with UID %v\n", uid)
+		// fmt.Printf("Failed to find source with UID %v\n", uid)
 		return nil, os.ErrNotExist
 	}
 	var o Source
