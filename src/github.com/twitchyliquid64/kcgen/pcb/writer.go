@@ -279,6 +279,9 @@ func (p *XYZ) write(prefix string, sw *swriter.SExpWriter) error {
 	if p.ZPresent {
 		sw.StringScalar(f(p.Z))
 	}
+	if p.Unlocked {
+		sw.StringScalar("unlocked")
+	}
 	return sw.CloseList(false)
 }
 

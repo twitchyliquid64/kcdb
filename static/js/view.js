@@ -71,6 +71,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
     $scope.componentLayer.removeChildren();
 
     if ($scope.module.graphics) {
+      $scope.unsupported = undefined;
       for (var i = 0; i < $scope.module.graphics.length; i++) {
         var g = $scope.module.graphics[i];
         switch (g.type) {
@@ -113,6 +114,11 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
             tGroup.addChild(pt);
             $scope.componentLayer.addChild(tGroup);
             break;
+          default:
+          if (!$scope.unsupported) {
+            $scope.unsupported = {};
+          }
+            $scope.unsupported[g.type] = g.type;
         }
       }
     }
@@ -137,7 +143,9 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
             }));
             break;
         }
-
+        if (pObj.position.z_present) {
+          pGroup.rotate(pObj.position.z);
+        }
         pGroup.strokeColor = pGroup.fillColor = resolveColor('pad', pObj.layers[0]);
 
         // TODO: support other kinds of drill holes.

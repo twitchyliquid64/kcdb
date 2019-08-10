@@ -236,6 +236,9 @@ func (t *ModText) write(sw *swriter.SExpWriter) error {
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
+	if t.Hidden {
+		sw.StringScalar("hide")
+	}
 
 	sw.StartList(true)
 	sw.StringScalar("effects")

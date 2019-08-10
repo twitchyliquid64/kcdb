@@ -103,10 +103,10 @@
             <div>
               <a href="#!" class="waves-effect waves-light btn" ng-click="goto()"><i class="material-icons left">open_in_browser</i> Goto Part</a>
             </div>
-            <div ng-show="module.arcs.length">
+            <div ng-show="unsupported">
               <blockquote><h5><i class="material-icons left">warning</i> Warnings</h5>
                 <ul class="collection">
-                  <li class="collection-item" ng-show="module.arcs.length"><b>Render omitted</b>: This footprint contains arcs, which are not currently supported.</li>
+                  <li class="collection-item" ng-repeat="k in unsupported"><b>Renders omitted</b>: This footprint contains <i>{{k}}</i> elements, which are not currently supported.</li>
                 </ul>
               </blockquote>
             </div>
