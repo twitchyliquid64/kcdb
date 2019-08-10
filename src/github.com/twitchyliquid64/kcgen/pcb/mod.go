@@ -11,8 +11,11 @@ import (
 
 // Module describes a KiCad module.
 type Module struct {
-	Name      string       `json:"name"`
+	Name string `json:"name"`
+
 	Placement ModPlacement `json:"placement"`
+	Placed    bool         `json:"placed"`
+	Locked    bool         `json:"locked"`
 
 	Layer string `json:"layer"`
 
@@ -60,9 +63,10 @@ type ModPolygon struct {
 
 // ModText represents text drawn in a module.
 type ModText struct {
-	Kind ModTextKind `json:"kind"`
-	Text string      `json:"value"`
-	At   XYZ         `json:"position"`
+	Kind   ModTextKind `json:"kind"`
+	Hidden bool        `json:"hidden"`
+	Text   string      `json:"value"`
+	At     XYZ         `json:"position"`
 
 	Layer   string      `json:"layer"`
 	Effects TextEffects `json:"effects"`
@@ -225,6 +229,18 @@ func parseModule(n sexp.Helper, ordering int) (*Module, error) {
 	}
 	for x := 2; x < n.MustNode().NumChildren(); x++ {
 		c := n.Child(x)
+		if c.IsScalar() {
+			switch c.MustNode().Value {
+			case "locked":
+				m.Locked = true
+			case "placed":
+				m.Placed = true
+			default:
+				return nil, fmt.Errorf("unknown scalar value in module: %v", c.MustNode().Value)
+			}
+			continue
+		}
+
 		switch c.Child(0).MustString() {
 		case "tedit":
 			m.Tedit = c.Child(1).MustString()
@@ -347,13 +363,24 @@ func parseModText(n sexp.Helper) (*ModText, error) {
 
 	for x := 3; x < n.MustNode().NumChildren(); x++ {
 		c := n.Child(x)
+		if c.MustNode().Value == "hide" {
+			t.Hidden = true
+			continue
+		}
+
 		switch c.Child(0).MustString() {
 		case "at":
 			t.At.X = c.Child(1).MustFloat64()
 			t.At.Y = c.Child(2).MustFloat64()
-			if c.MustNode().NumChildren() >= 4 {
-				t.At.Z = c.Child(3).MustFloat64()
-				t.At.ZPresent = true
+			for z := 3; z < c.MustNode().NumChildren(); z++ {
+				c := c.Child(x)
+				switch c.MustNode().Value {
+				case "unlocked":
+					t.At.Unlocked = true
+				default:
+					t.At.Z = c.MustFloat64()
+					t.At.ZPresent = true
+				}
 			}
 		case "layer":
 			t.Layer = c.Child(1).MustString()

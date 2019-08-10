@@ -54,6 +54,9 @@ type TextEffects struct {
 	FontSize  XY          `json:"size"`
 	Thickness float64     `json:"thickness"`
 	Justify   TextJustify `json:"justify"`
+
+	Bold   bool `json:"bold"`
+	Italic bool `json:"italic"`
 }
 
 // Line represents a graphical line.
@@ -170,6 +173,18 @@ func parseTextEffects(n sexp.Helper) (TextEffects, error) {
 		case "font":
 			for z := 1; z < c.MustNode().NumChildren(); z++ {
 				c := c.Child(z)
+
+				if c.IsScalar() {
+					switch c.MustNode().Value {
+					case "italic":
+						e.Italic = true
+					case "bold":
+						e.Bold = true
+					default:
+						return TextEffects{}, fmt.Errorf("unhandled scalar in text effects: %v", c.MustNode().Value)
+					}
+				}
+
 				switch c.Child(0).MustString() {
 				case "size":
 					e.FontSize.X = c.Child(1).MustFloat64()

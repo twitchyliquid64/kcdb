@@ -16,8 +16,9 @@ type XY struct {
 type XYZ struct {
 	X        float64 `json:"x"`
 	Y        float64 `json:"y"`
-	Z        float64 `json:"z"`
-	ZPresent bool    `json:"z_present"`
+	Z        float64 `json:"z,omitempty"`
+	ZPresent bool    `json:"z_present,omitempty"`
+	Unlocked bool    `json:"unlocked,omitempty"`
 }
 
 // Via represents a via.
