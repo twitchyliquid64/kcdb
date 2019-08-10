@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 	"os"
+	"time"
 )
 
 // SymbolTable contains symbols.

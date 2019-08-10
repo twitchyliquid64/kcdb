@@ -70,38 +70,52 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
     $scope.paperSurface.view.center = new $scope.paperSurface.Point(0, 0);
     $scope.componentLayer.removeChildren();
 
-    // lines
-    if ($scope.module && $scope.module.lines)
-      for (var i = 0; i < $scope.module.lines.length; i++) {
-        var lObj = $scope.module.lines[i];
-        var l = new $scope.paperSurface.Path.Line(lObj.start, lObj.end);
-        l.strokeColor = l.fillColor = resolveColor('line', lObj.layer);
-        l.strokeWidth = lObj.width * 15;
-        $scope.componentLayer.addChild(l);
-      }
+    if ($scope.module.graphics) {
+      for (var i = 0; i < $scope.module.graphics.length; i++) {
+        var g = $scope.module.graphics[i];
+        switch (g.type) {
+          case 'fp_line':
+            var l = new $scope.paperSurface.Path.Line(g.renderable.start, g.renderable.end);
+            l.strokeColor = l.fillColor = resolveColor('line', g.renderable.layer);
+            l.strokeWidth = g.renderable.width * 15;
+            $scope.componentLayer.addChild(l);
+            break;
 
-    // circles
-    if ($scope.module && $scope.module.circles)
-      for (var i = 0; i < $scope.module.circles.length; i++) {
-        var cObj = $scope.module.circles[i];
-        var c = new $scope.paperSurface.Shape.Circle({
-          center: cObj.center,
-          radius: new $scope.paperSurface.Point(cObj.center).getDistance(cObj.end),
-        });
-        c.strokeColor = resolveColor('circle', cObj.layer);
-        c.strokeWidth = cObj.width * 5;
-        $scope.componentLayer.addChild(c);
-      }
+          case 'fp_circle':
+            var c = new $scope.paperSurface.Shape.Circle({
+              center: g.renderable.center,
+              radius: new $scope.paperSurface.Point(g.renderable.center).getDistance(g.renderable.end),
+            });
+            c.strokeColor = resolveColor('circle', g.renderable.layer);
+            c.strokeWidth = g.renderable.width * 5;
+            $scope.componentLayer.addChild(c);
+            break;
 
-    // polygons
-    if ($scope.module && $scope.module.polygons)
-      for (var i = 0; i < $scope.module.polygons.length; i++) {
-        var pObj = $scope.module.polygons[i];
-        var p = new $scope.paperSurface.Path(pObj.points);
-        p.strokeColor = p.fillColor = resolveColor('polygon', pObj.layer);
-        p.strokeWidth = pObj.width * 5;
-        $scope.componentLayer.addChild(p);
+          case 'fp_poly':
+            var p = new $scope.paperSurface.Path(g.renderable.points);
+            p.strokeColor = p.fillColor = resolveColor('polygon', g.renderable.layer);
+            p.strokeWidth = g.renderable.width * 5;
+            $scope.componentLayer.addChild(p);
+            break;
+
+          case 'fp_text':
+            var tGroup = new $scope.paperSurface.Group();
+            var pt = new $scope.paperSurface.PointText({
+              point: g.renderable.position,
+              content: '' + g.renderable.value,
+              fillColor: resolveColor('text', g.renderable.layer),
+              fontFamily: 'Lucida Console',
+              fontSize: 1,
+              justification: 'center',
+            });
+            pt.translate([0, g.renderable.position.y - pt.position.y]);
+            pt.scale(g.renderable.effects.size.x, g.renderable.effects.size.y);
+            tGroup.addChild(pt);
+            $scope.componentLayer.addChild(tGroup);
+            break;
+        }
       }
+    }
 
     // pads
     if ($scope.module && $scope.module.pads)
@@ -146,25 +160,6 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
         pt.translate([0, pObj.position.y - pt.position.y]);
         pGroup.addChild(pt);
         $scope.componentLayer.addChild(pGroup);
-      }
-
-    // text
-    if ($scope.module && $scope.module.texts)
-      for (var i = 0; i < $scope.module.texts.length; i++) {
-        var tObj = $scope.module.texts[i];
-        var tGroup = new $scope.paperSurface.Group();
-        var pt = new $scope.paperSurface.PointText({
-          point: tObj.position,
-          content: '' + tObj.value,
-          fillColor: resolveColor('text', tObj.layer),
-          fontFamily: 'Lucida Console',
-          fontSize: 1,
-          justification: 'center',
-        });
-        pt.translate([0, tObj.position.y - pt.position.y]);
-        pt.scale(tObj.size.x, tObj.size.y);
-        tGroup.addChild(pt);
-        $scope.componentLayer.addChild(tGroup);
       }
 
     $scope.componentLayer.scale(10);

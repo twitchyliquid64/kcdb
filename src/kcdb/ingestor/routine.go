@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"kcdb/db"
-	"kcdb/mod"
 	"kcdb/sym"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/twitchyliquid64/kcgen/pcb"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -46,6 +46,7 @@ func doIngest() error {
 	}()
 
 	fmt.Printf("[ingest][clone] Cloning: %v (%d)\n", current.URL, current.UID)
+	defer db.SetSourceUpdated(context.Background(), current.UID, db.DB())
 	_, err = git.PlainClone(tmpDir, false, &git.CloneOptions{
 		URL: current.URL,
 	})
@@ -67,14 +68,14 @@ func doIngest() error {
 			url := db.MakePartURL(current.URL, path[len(tmpDir)+1:])
 
 			//fmt.Printf("File: %+v\n", path)
-			footprint, err := mod.DecodeModule(strings.NewReader(string(b)))
+			mod, err := pcb.ParseModule(strings.NewReader(string(b)))
 			if err != nil {
 				fmt.Printf("[ingest][footprint] Failed parsing %q: %v\n", path, err)
 				fmt.Println(string(b))
 				return nil
 			}
 
-			_, err = upsertFootprint(current, url, b, footprint)
+			_, err = upsertFootprint(current, url, b, mod)
 			if err != nil {
 				return err
 			}
@@ -105,13 +106,10 @@ func doIngest() error {
 		return nil
 	})
 
-	if err != nil {
-		return err
-	}
-	return db.SetSourceUpdated(context.Background(), current.UID, db.DB())
+	return err
 }
 
-func upsertFootprint(source *db.Source, url string, b []byte, fp *mod.Module) (int, error) {
+func upsertFootprint(source *db.Source, url string, b []byte, fp *pcb.Module) (int, error) {
 	ctx := context.Background()
 	exists, uid, err := db.FootprintExists(ctx, url, db.DB())
 	if err != nil {

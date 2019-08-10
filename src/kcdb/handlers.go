@@ -10,9 +10,10 @@ import (
 
 	"kcdb/db"
 	"kcdb/ingestor"
-	"kcdb/mod"
 	"kcdb/sym"
 	"kcdb/search"
+
+	"github.com/twitchyliquid64/kcgen/pcb"
 )
 
 // SearchHandler performs a search.
@@ -140,7 +141,7 @@ func ModuleDetails(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	mod, err := mod.DecodeModule(strings.NewReader(string(raw)))
+	mod, err := pcb.ParseModule(strings.NewReader(string(raw)))
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		fmt.Printf("Err: %v\n", err)
