@@ -75,8 +75,8 @@ func TestPCB(t *testing.T) {
 	if got, want := p.Zones[0].NetName, "GND"; got != want {
 		t.Errorf("p.Zones[0].NetName = %v, want %v", got, want)
 	}
-	if got, want := p.Zones[0].Layer, "B.Cu"; got != want {
-		t.Errorf("p.Zones[0].Layer = %v, want %v", got, want)
+	if got, want := p.Zones[0].Layers, []string{"B.Cu"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("p.Zones[0].Layers = %v, want %v", got, want)
 	}
 	if got, want := p.Zones[0].MinThickness, 0.254; got != want {
 		t.Errorf("p.Zones[0].MinThickness = %v, want %v", got, want)
@@ -84,39 +84,35 @@ func TestPCB(t *testing.T) {
 	if got, want := p.Zones[0].ConnectPads.Clearance, 0.508; got != want {
 		t.Errorf("p.Zones[0].ConnectPads.Clearance = %v, want %v", got, want)
 	}
-	if got, want := p.Zones[0].Fill.Enabled, true; got != want {
-		t.Errorf("p.Zones[0].Fill.Enabled = %v, want %v", got, want)
+	if got, want := p.Zones[0].Fill.IsFilled, true; got != want {
+		t.Errorf("p.Zones[0].Fill.IsFilled = %v, want %v", got, want)
 	}
 	if got, want := p.Zones[0].Fill.Segments, 16; got != want {
 		t.Errorf("p.Zones[0].Fill.Segments = %v, want %v", got, want)
 	}
 
-	if got, want := len(p.Tracks), 44; got != want {
-		t.Errorf("len(p.Tracks) = %v, want %v", got, want)
-		t.Logf("p.Tracks = %+v", p.Tracks)
+	if got, want := len(p.Segments), 45; got != want {
+		t.Errorf("len(p.Segments) = %v, want %v", got, want)
+		t.Logf("p.Segments = %+v", p.Segments)
 	}
-	if got, want := p.Tracks[11].NetIndex, 2; got != want {
-		t.Errorf("p.Tracks[11].NetIndex = %v, want %v", got, want)
+	if got, want := p.Segments[12].(*Track).NetIndex, 2; got != want {
+		t.Errorf("p.Tracks[12].NetIndex = %v, want %v", got, want)
 	}
-	if got, want := p.Tracks[11].Start.X, 136.652; got != want {
-		t.Errorf("p.Tracks[11].Start.X = %v, want %v", got, want)
+	if got, want := p.Segments[12].(*Track).Start.X, 136.652; got != want {
+		t.Errorf("p.Segments[12].Start.X = %v, want %v", got, want)
 	}
 
-	if got, want := len(p.Vias), 1; got != want {
-		t.Errorf("len(p.Vias) = %v, want %v", got, want)
-		t.Logf("p.Vias = %+v", p.Vias)
+	if got, want := p.Segments[0].(*Via).NetIndex, 1; got != want {
+		t.Errorf("p.Segments[0].NetIndex = %v, want %v", got, want)
 	}
-	if got, want := p.Vias[0].NetIndex, 1; got != want {
-		t.Errorf("p.Vias[0].NetIndex = %v, want %v", got, want)
+	if got, want := p.Segments[0].(*Via).At.X, 88.1; got != want {
+		t.Errorf("p.Segments[0].X = %v, want %v", got, want)
 	}
-	if got, want := p.Vias[0].At.X, 88.1; got != want {
-		t.Errorf("p.Vias[0].X = %v, want %v", got, want)
+	if got, want := p.Segments[0].(*Via).Drill, 0.4; got != want {
+		t.Errorf("p.Segments[0].Drill = %v, want %v", got, want)
 	}
-	if got, want := p.Vias[0].Drill, 0.4; got != want {
-		t.Errorf("p.Vias[0].Drill = %v, want %v", got, want)
-	}
-	if got, want := p.Vias[0].Layers, []string{"F.Cu", "B.Cu"}; !reflect.DeepEqual(got, want) {
-		t.Errorf("p.Vias[0].Layers = %v, want %v", got, want)
+	if got, want := p.Segments[0].(*Via).Layers, []string{"F.Cu", "B.Cu"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("p.Segments[0].Layers = %v, want %v", got, want)
 	}
 
 	if got, want := len(p.NetClasses), 1; got != want {
@@ -133,39 +129,31 @@ func TestPCB(t *testing.T) {
 		t.Errorf("p.NetClasses[0].Nets[0] = %v, want %v", got, want)
 	}
 
-	if got, want := len(p.Lines), 4; got != want {
-		t.Errorf("len(p.Lines) = %v, want %v", got, want)
-		t.Logf("p.Lines = %+v", p.Lines)
+	if got, want := len(p.Drawings), 7; got != want {
+		t.Errorf("len(p.Drawings) = %v, want %v", got, want)
+		t.Logf("p.Drawings = %+v", p.Drawings)
 	}
-	if got, want := p.Lines[0].Width, 0.15; got != want {
-		t.Errorf("p.Lines[0].Width = %v, want %v", got, want)
+	if got, want := p.Drawings[3].(*Line).Width, 0.15; got != want {
+		t.Errorf("p.Drawings[3].Width = %v, want %v", got, want)
 	}
-	if got, want := p.Lines[0].Start.X, 173.736; got != want {
-		t.Errorf("p.Lines[0].Start.X = %v, want %v", got, want)
-	}
-
-	if got, want := len(p.Texts), 1; got != want {
-		t.Errorf("len(p.Texts) = %v, want %v", got, want)
-		t.Logf("p.Texts = %+v", p.Texts)
-	}
-	if got, want := p.Texts[0].Text, "Oops"; got != want {
-		t.Errorf("p.Texts[0].Text = %v, want %v", got, want)
-	}
-	if got, want := p.Texts[0].Effects.FontSize.X, 1.5; got != want {
-		t.Errorf("p.Texts[0].Effects.FontSize.X = %v, want %v", got, want)
+	if got, want := p.Drawings[3].(*Line).Start.X, 173.736; got != want {
+		t.Errorf("p.Drawings[3].Start.X = %v, want %v", got, want)
 	}
 
-	if got, want := len(p.Dimensions), 2; got != want {
-		t.Errorf("len(p.Dimensions) = %v, want %v", got, want)
-		t.Logf("p.Dimensions = %+v", p.Dimensions)
+	if got, want := p.Drawings[2].(*Text).Text, "Oops"; got != want {
+		t.Errorf("p.Drawings[2].Text = %v, want %v", got, want)
 	}
-	if got, want := p.Dimensions[0].Width, 0.3; got != want {
+	if got, want := p.Drawings[2].(*Text).Effects.FontSize.X, 1.5; got != want {
+		t.Errorf("p.Drawings[2].Effects.FontSize.X = %v, want %v", got, want)
+	}
+
+	if got, want := p.Drawings[0].(*Dimension).Width, 0.3; got != want {
 		t.Errorf("p.Dimensions[0].Width = %v, want %v", got, want)
 	}
-	if got, want := p.Dimensions[0].Text.Text, "12.446 mm"; got != want {
-		t.Errorf("p.Dimensions[0].Text.Text = %v, want %v", got, want)
+	if got, want := p.Drawings[0].(*Dimension).Text.Text, "12.446 mm"; got != want {
+		t.Errorf("p.Drawings[0].Text.Text = %v, want %v", got, want)
 	}
-	if got, want := p.Dimensions[0].Features[1].Feature, "feature2"; got != want {
-		t.Errorf("p.Dimensions[0].Features[1].Feature = %v, want %v", got, want)
+	if got, want := p.Drawings[0].(*Dimension).Features[1].Feature, "feature2"; got != want {
+		t.Errorf("p.Drawings[0].Features[1].Feature = %v, want %v", got, want)
 	}
 }

@@ -97,17 +97,30 @@ func (m *Module) write(sw *swriter.SExpWriter, doPlacement bool) error {
 		sw.StringScalar("model")
 		sw.StringScalar(m.Model.Path)
 
-		sw.StartList(true)
-		sw.StringScalar("at")
-		if err := m.Model.At.write("xyz", sw); err != nil {
-			return err
+		if m.Model.At.X == 0 && m.Model.At.Y == 0 && m.Model.At.Z == 0 &&
+			(m.Model.Offset.X != 0 || m.Model.Offset.Y != 0 || m.Model.Offset.Z != 0) {
+			sw.StartList(true)
+			sw.StringScalar("offset")
+			if err := m.Model.Offset.writeDouble("xyz", sw); err != nil {
+				return err
+			}
+			if err := sw.CloseList(false); err != nil {
+				return err
+			}
+		} else {
+			sw.StartList(true)
+			sw.StringScalar("at")
+			if err := m.Model.At.writeDouble("xyz", sw); err != nil {
+				return err
+			}
+			if err := sw.CloseList(false); err != nil {
+				return err
+			}
 		}
-		if err := sw.CloseList(false); err != nil {
-			return err
-		}
+
 		sw.StartList(true)
 		sw.StringScalar("scale")
-		if err := m.Model.Scale.write("xyz", sw); err != nil {
+		if err := m.Model.Scale.writeDouble("xyz", sw); err != nil {
 			return err
 		}
 		if err := sw.CloseList(false); err != nil {
@@ -115,7 +128,7 @@ func (m *Module) write(sw *swriter.SExpWriter, doPlacement bool) error {
 		}
 		sw.StartList(true)
 		sw.StringScalar("rotate")
-		if err := m.Model.Rotate.write("xyz", sw); err != nil {
+		if err := m.Model.Rotate.writeDouble("xyz", sw); err != nil {
 			return err
 		}
 		if err := sw.CloseList(false); err != nil {
@@ -280,14 +293,16 @@ func (p *ModPolygon) write(sw *swriter.SExpWriter) error {
 
 	sw.StartList(false)
 	sw.StringScalar("pts")
+	sw.AdjustIndent(-2)
 	for i, pts := range p.Points {
 		if err := pts.write("xy", sw); err != nil {
 			return err
 		}
-		if i%4 == 3 {
+		if (i%4 == 3) && i < len(p.Points)-1 {
 			sw.Newlines(1)
 		}
 	}
+	sw.AdjustIndent(2)
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
@@ -361,7 +376,15 @@ func (p *Pad) write(sw *swriter.SExpWriter) error {
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
-	sw.Newlines(1)
+
+	doNewline := p.NetNum != 0 ||
+		p.DieLength != 0 ||
+		p.SolderMaskMargin != 0 ||
+		p.SolderPasteMargin != 0 ||
+		p.SolderPasteMarginRatio != 0 ||
+		p.Clearance != 0 ||
+		p.ThermalWidth != 0 ||
+		p.ThermalGap != 0
 
 	if p.Shape == ShapeRoundRect || p.Shape == ShapeChamferedRect {
 		sw.StartList(false)
@@ -371,6 +394,11 @@ func (p *Pad) write(sw *swriter.SExpWriter) error {
 			return err
 		}
 	}
+
+	if doNewline {
+		sw.Newlines(1)
+	}
+
 	// if p.Shape == ShapeChamferedRect {
 	//   sw.Newlines(1)
 	//   // TODO: Implement

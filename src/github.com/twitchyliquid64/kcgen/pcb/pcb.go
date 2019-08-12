@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/nsf/sexp"
+	"github.com/twitchyliquid64/kcgen/swriter"
 )
 
 // Layer describes the attributes of a layer.
@@ -56,11 +57,8 @@ type PCB struct {
 	LayersByName map[string]*Layer `json:"-"`
 	Layers       []*Layer          `json:"layers"`
 
-	Tracks     []Track     `json:"tracks"`
-	Vias       []Via       `json:"vias"`
-	Lines      []Line      `json:"lines"`
-	Texts      []Text      `json:"texts"`
-	Dimensions []Dimension `json:"dimensions"`
+	Segments []NetSegment `json:"segments"`
+	Drawings []Drawing    `json:"drawings"`
 
 	Nets       map[int]Net `json:"nets"`
 	NetClasses []NetClass  `json:"net_classes"`
@@ -69,6 +67,16 @@ type PCB struct {
 
 	// TODO(twitchyliquid64): Compute these & expose them.
 	generalFields [][]string
+}
+
+// Drawing represents a drawable element.
+type Drawing interface {
+	write(sw *swriter.SExpWriter) error
+}
+
+// NetSegment represents copper regions which form part of a net.
+type NetSegment interface {
+	write(sw *swriter.SExpWriter) error
 }
 
 // EditorSetup describes how the editor should be configured when
@@ -102,6 +110,7 @@ type EditorSetup struct {
 	PadSize            []float64
 	PadDrill           float64
 	PadToMaskClearance float64
+	SolderMaskMinWidth float64
 
 	AuxAxisOrigin   []float64
 	VisibleElements string
@@ -217,14 +226,14 @@ func DecodeFile(fpath string) (*PCB, error) {
 				if err != nil {
 					return nil, err
 				}
-				pcb.Tracks = append(pcb.Tracks, t)
+				pcb.Segments = append(pcb.Segments, &t)
 
 			case "via":
 				v, err := parseVia(n, ordering)
 				if err != nil {
 					return nil, err
 				}
-				pcb.Vias = append(pcb.Vias, v)
+				pcb.Segments = append(pcb.Segments, &v)
 
 			case "zone":
 				z, err := parseZone(n, ordering)
@@ -238,21 +247,28 @@ func DecodeFile(fpath string) (*PCB, error) {
 				if err != nil {
 					return nil, err
 				}
-				pcb.Lines = append(pcb.Lines, l)
+				pcb.Drawings = append(pcb.Drawings, &l)
 
 			case "gr_text":
 				t, err := parseGRText(n, ordering)
 				if err != nil {
 					return nil, err
 				}
-				pcb.Texts = append(pcb.Texts, t)
+				pcb.Drawings = append(pcb.Drawings, &t)
+
+			case "gr_arc":
+				a, err := parseGRArc(n, ordering)
+				if err != nil {
+					return nil, err
+				}
+				pcb.Drawings = append(pcb.Drawings, &a)
 
 			case "dimension":
 				d, err := parseDimension(n, ordering)
 				if err != nil {
 					return nil, err
 				}
-				pcb.Dimensions = append(pcb.Dimensions, d)
+				pcb.Drawings = append(pcb.Drawings, &d)
 
 			case "net_class":
 				c, err := parseNetClass(n, ordering)
@@ -371,6 +387,8 @@ func parseSetup(n sexp.Helper, ordering int) (*EditorSetup, error) {
 			e.PadDrill = c.Child(1).MustFloat64()
 		case "pad_to_mask_clearance":
 			e.PadToMaskClearance = c.Child(1).MustFloat64()
+		case "solder_mask_min_width":
+			e.SolderMaskMinWidth = c.Child(1).MustFloat64()
 
 		case "aux_axis_origin":
 			for y := 1; y < c.MustNode().NumChildren(); y++ {

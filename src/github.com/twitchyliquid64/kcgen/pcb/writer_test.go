@@ -74,39 +74,39 @@ func TestPCBWrite(t *testing.T) {
 			name: "vias",
 			pcb: PCB{
 				FormatVersion: 4,
-				Vias: []Via{
-					{At: XY{X: 100, Y: 32.5}, Layers: []string{"F.Cu", "B.Cu"}, NetIndex: 2},
-					{At: XY{X: 10, Y: 32.5}, Layers: []string{"F.Cu", "B.Cu"}, NetIndex: 2},
+				Segments: []NetSegment{
+					&Via{At: XY{X: 100, Y: 32.5}, Layers: []string{"F.Cu", "B.Cu"}, NetIndex: 2},
+					&Via{At: XY{X: 10, Y: 32.5}, Layers: []string{"F.Cu", "B.Cu"}, NetIndex: 2},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n \n\n  (via (at 100 32.5) (size 0) (drill 0) (layers F.Cu B.Cu) (net 2))\n  (via (at 10 32.5) (size 0) (drill 0) (layers F.Cu B.Cu) (net 2))\n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (via (at 100 32.5) (size 0) (drill 0) (layers F.Cu B.Cu) (net 2))\n  (via (at 10 32.5) (size 0) (drill 0) (layers F.Cu B.Cu) (net 2))\n)\n",
 		},
 		{
 			name: "tracks",
 			pcb: PCB{
 				FormatVersion: 4,
-				Tracks: []Track{
-					{Start: XY{X: 100, Y: 32.5}, End: XY{X: 10, Y: 32.5}, Layer: "F.Cu", NetIndex: 2},
+				Segments: []NetSegment{
+					&Track{Start: XY{X: 100, Y: 32.5}, End: XY{X: 10, Y: 32.5}, Layer: "F.Cu", NetIndex: 2},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n \n  (segment (start 100 32.5) (end 10 32.5) (width 0) (layer F.Cu) (net 2))\n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (segment (start 100 32.5) (end 10 32.5) (width 0) (layer F.Cu) (net 2))\n)\n",
 		},
 		{
 			name: "lines",
 			pcb: PCB{
 				FormatVersion: 4,
-				Lines: []Line{
-					{Start: XY{X: 100, Y: 32.5}, End: XY{X: 10, Y: 32.5}, Layer: "Edge.Cuts", Width: 2},
+				Drawings: []Drawing{
+					&Line{Start: XY{X: 100, Y: 32.5}, End: XY{X: 10, Y: 32.5}, Layer: "Edge.Cuts", Width: 2},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n \n  (gr_line (start 100 32.5) (end 10 32.5) (layer Edge.Cuts) (width 2))\n\n \n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (gr_line (start 100 32.5) (end 10 32.5) (layer Edge.Cuts) (width 2))\n)\n",
 		},
 		{
 			name: "text",
 			pcb: PCB{
 				FormatVersion: 4,
-				Texts: []Text{
-					{At: XYZ{X: 100, Y: 32.5}, Text: "Oops", Layer: "F.SilkS", Effects: TextEffects{
+				Drawings: []Drawing{
+					&Text{At: XYZ{X: 100, Y: 32.5}, Text: "Oops", Layer: "F.SilkS", Effects: TextEffects{
 						FontSize:  XY{X: 1.5, Y: 1.5},
 						Thickness: 0.3,
 					}},
@@ -119,7 +119,7 @@ func TestPCBWrite(t *testing.T) {
 			pcb: PCB{
 				FormatVersion: 4,
 				Zones: []Zone{
-					{NetNum: 42, Tstamp: "0", Layer: "F.Cu", NetName: "DBUS", MinThickness: 0.254,
+					{NetNum: 42, Tstamp: "0", Layers: []string{"F.Cu"}, NetName: "DBUS", MinThickness: 0.254,
 						BasePolys: [][]XY{
 							[]XY{{X: 11, Y: 22}, {X: 11.1, Y: 22}, {X: 11, Y: 22}, {X: 11, Y: 22}, {X: 11, Y: 22}, {X: 11, Y: 22}, {X: 11, Y: 22}},
 						},
@@ -129,14 +129,14 @@ func TestPCBWrite(t *testing.T) {
 					},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n \n\n  (zone (net 42) (net_name DBUS) (layer F.Cu) (tstamp 0) (hatch \"\" 0)\n    (connect_pads (clearance 0))\n    (min_thickness 0.254)\n    (fill no (arc_segments 0) (thermal_gap 0) (thermal_bridge_width 0))\n    (polygon\n      (pts\n        (xy 11 22) (xy 11.1 22) (xy 11 22) (xy 11 22) (xy 11 22)\n        (xy 11 22) (xy 11 22)\n      )\n    )\n    (filled_polygon\n      (pts\n        (xy 11 22) (xy 11.1 22) (xy 11 22) (xy 11 22) (xy 11 22)\n        (xy 11 22) (xy 11 22)\n      )\n    )\n  )\n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (zone (net 42) (net_name DBUS) (layer F.Cu) (tstamp 0) (hatch \"\" 0)\n    (connect_pads (clearance 0))\n    (min_thickness 0.254)\n    (fill (arc_segments 0) (thermal_gap 0) (thermal_bridge_width 0))\n    (polygon\n      (pts\n        (xy 11 22) (xy 11.1 22) (xy 11 22) (xy 11 22) (xy 11 22)\n        (xy 11 22) (xy 11 22)\n      )\n    )\n    (filled_polygon\n      (pts\n        (xy 11 22) (xy 11.1 22) (xy 11 22) (xy 11 22) (xy 11 22)\n        (xy 11 22) (xy 11 22)\n      )\n    )\n  )\n)\n",
 		},
 		{
 			name: "dimensions",
 			pcb: PCB{
 				FormatVersion: 4,
-				Dimensions: []Dimension{
-					{
+				Drawings: []Drawing{
+					&Dimension{
 						CurrentMeasurement: 12.446,
 						Width:              0.3,
 						Layer:              "F.Fab",
@@ -160,7 +160,7 @@ func TestPCBWrite(t *testing.T) {
 					},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (dimension 12.446 (width 0.3) (layer F.Fab)\n    (gr_text \"12.446 mm\" (at 125.396 93.853 90) (layer F.Fab)\n      (effects (font (size 1.5 1.5) (thickness 0.3)))\n    )\n    (feature1 (pts (xy 173.736 100.076) (xy 173.736 106.586)))\n    (feature2 (pts (xy 132.08 100.076) (xy 132.08 106.586)))\n  )\n \n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (dimension 12.446 (width 0.3) (layer F.Fab)\n    (gr_text \"12.446 mm\" (at 125.396 93.853 90) (layer F.Fab)\n      (effects (font (size 1.5 1.5) (thickness 0.3)))\n    )\n    (feature1 (pts (xy 173.736 100.076) (xy 173.736 106.586)))\n    (feature2 (pts (xy 132.08 100.076) (xy 132.08 106.586)))\n  )\n)\n",
 		},
 		{
 			name: "mod simple",
@@ -343,7 +343,7 @@ func TestPCBWrite(t *testing.T) {
 					},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (module Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm (layer F.Cu) (tedit 5ADA75A0) (tstamp 5AE3D8AB)\n    (at 0 0)\n    (fp_poly (pts (xy 0 0) (xy 1 0) (xy 1 1) (xy 0 1)\n        (xy 0 0)) (layer F.Fab) (width 0.1))\n  )\n\n \n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (module Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm (layer F.Cu) (tedit 5ADA75A0) (tstamp 5AE3D8AB)\n    (at 0 0)\n    (fp_poly (pts (xy 0 0) (xy 1 0) (xy 1 1) (xy 0 1)\n      (xy 0 0)) (layer F.Fab) (width 0.1))\n  )\n\n \n)\n",
 		},
 		{
 			name: "mod pad",
@@ -411,6 +411,10 @@ func TestDecodeThenSerializeMatches(t *testing.T) {
 			name:  "t1",
 			fname: "t1.kicad_pcb",
 		},
+		{
+			name:  "fume extractor",
+			fname: "anavi-fume-extractor.kicad_pcb",
+		},
 	}
 
 	for _, tc := range tcs {
@@ -429,7 +433,6 @@ func TestDecodeThenSerializeMatches(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			ioutil.WriteFile("test.kicad_pcb", serialized.Bytes(), 0755)
 			if !bytes.Equal(d, serialized.Bytes()) {
 				t.Error("outputs differ")
 				diffs := diff.New()
@@ -437,6 +440,7 @@ func TestDecodeThenSerializeMatches(t *testing.T) {
 				// t.Log(diffs.DiffPrettyText(dm))
 				// t.Log(diffs.DiffToDelta(dm))
 				t.Log(diffs.PatchToText(diffs.PatchMake(dm)))
+				// ioutil.WriteFile("test.kicad_pcb", serialized.Bytes(), 0755)
 			}
 		})
 	}

@@ -2,6 +2,7 @@ package pcb
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/nsf/sexp"
 )
@@ -34,29 +35,40 @@ type Via struct {
 
 // Zone represents a zone.
 type Zone struct {
-	NetNum  int    `json:"net_num"`
-	NetName string `json:"net_name"`
-	Layer   string `json:"layer"`
+	IsKeepout bool     `json:"is_keepout"`
+	NetNum    int      `json:"net_num"`
+	NetName   string   `json:"net_name"`
+	Layers    []string `json:"layers"`
 
-	Tstamp string `json:"tstamp"`
+	Tstamp   string `json:"tstamp"`
+	Priority int    `json:"priority"`
 
 	Hatch struct {
-		Mode string  `json:"mode"`
-		Size float64 `json:"size"`
+		Mode  string  `json:"mode"`
+		Pitch float64 `json:"pitch"`
 	} `json:"hatch"`
 
 	ConnectPads struct {
 		Clearance float64 `json:"clearance"`
+		Mode      string  `json:"mode"`
 	} `json:"connect_pads"`
 
 	Fill struct {
-		Enabled            bool    `json:"enabled"`
+		IsFilled           bool    `json:"is_filled"`
+		Mode               string  `json:"mode"`
 		Segments           int     `json:"segments"`
 		ThermalGap         float64 `json:"thermal_gap"`
 		ThermalBridgeWidth float64 `json:"thermal_bridge_width"`
 	} `json:"fill"`
 
-	MinThickness float64 `json:"min_thickness"`
+	Keepout struct {
+		TracksAllowed     bool `json:"tracks_allowed"`
+		ViasAllowed       bool `json:"vias_allowed"`
+		CopperPourAllowed bool `json:"copperpour_allowed"`
+	} `json:"keepout"`
+
+	MinThickness        float64 `json:"min_thickness"`
+	FilledAreaThickness bool    `json:"filled_area_thickness"`
 
 	Polys     [][]XY `json:"polys,omitempty"`
 	BasePolys [][]XY `json:"base_polys,omitempty"`
@@ -71,6 +83,8 @@ type Track struct {
 	Width    float64 `json:"width"`
 	Layer    string  `json:"layer"`
 	NetIndex int     `json:"net_index"`
+
+	Tstamp string `json:"tstamp"`
 
 	order int
 }
@@ -108,15 +122,24 @@ func parseZone(n sexp.Helper, ordering int) (*Zone, error) {
 		case "net_name":
 			z.NetName = c.Child(1).MustString()
 		case "layer":
-			z.Layer = c.Child(1).MustString()
+			z.Layers = []string{c.Child(1).MustString()}
+		case "layers":
+			z.Layers = nil
+			for j := 1; j < c.MustNode().NumChildren(); j++ {
+				z.Layers = append(z.Layers, c.Child(j).MustString())
+			}
 		case "tstamp":
 			z.Tstamp = c.Child(1).MustString()
 
 		case "hatch":
 			z.Hatch.Mode = c.Child(1).MustString()
-			z.Hatch.Size = c.Child(2).MustFloat64()
+			z.Hatch.Pitch = c.Child(2).MustFloat64()
 		case "min_thickness":
 			z.MinThickness = c.Child(1).MustFloat64()
+		case "priority":
+			z.Priority = c.Child(1).MustInt()
+		case "filled_area_thickness":
+			z.FilledAreaThickness = c.Child(1).MustString() == "yes"
 
 		case "connect_pads":
 			for y := 1; y < c.MustNode().NumChildren(); y++ {
@@ -124,19 +147,47 @@ func parseZone(n sexp.Helper, ordering int) (*Zone, error) {
 				switch c2.Child(0).MustString() {
 				case "clearance":
 					z.ConnectPads.Clearance = c2.Child(1).MustFloat64()
+				default:
+					z.ConnectPads.Mode = c2.Child(1).MustString()
 				}
 			}
 		case "fill":
-			z.Fill.Enabled = c.Child(1).MustString() == "yes"
-			for y := 2; y < c.MustNode().NumChildren(); y++ {
+			for y := 1; y < c.MustNode().NumChildren(); y++ {
 				c2 := c.Child(y)
+				if c2.IsScalar() {
+					switch c2.MustNode().Value {
+					case "yes":
+						z.Fill.IsFilled = true
+					default:
+						return nil, fmt.Errorf("unhandled scalar in zone fill: %v", c2.MustNode().Value)
+					}
+					continue
+				}
+
 				switch c2.Child(0).MustString() {
+				case "mode":
+					z.Fill.Mode = c2.Child(1).MustString()
 				case "arc_segments":
 					z.Fill.Segments = c2.Child(1).MustInt()
 				case "thermal_gap":
 					z.Fill.ThermalGap = c2.Child(1).MustFloat64()
 				case "thermal_bridge_width":
 					z.Fill.ThermalBridgeWidth = c2.Child(1).MustFloat64()
+				}
+			}
+
+		case "keepout":
+			z.IsKeepout = true
+			for y := 1; y < c.MustNode().NumChildren(); y++ {
+				c2 := c.Child(y)
+
+				switch c2.Child(0).MustString() {
+				case "tracks":
+					z.Keepout.TracksAllowed = c2.Child(1).MustString() == "allowed"
+				case "vias":
+					z.Keepout.ViasAllowed = c2.Child(1).MustString() == "allowed"
+				case "copperpour":
+					z.Keepout.CopperPourAllowed = c2.Child(1).MustString() == "allowed"
 				}
 			}
 
@@ -179,6 +230,8 @@ func parseSegment(n sexp.Helper, ordering int) (Track, error) {
 			t.NetIndex = c.Child(1).MustInt()
 		case "layer":
 			t.Layer = c.Child(1).MustString()
+		case "tstamp":
+			t.Tstamp = c.Child(1).MustString()
 		case "start":
 			t.Start = XY{X: c.Child(1).MustFloat64(), Y: c.Child(2).MustFloat64()}
 		case "end":

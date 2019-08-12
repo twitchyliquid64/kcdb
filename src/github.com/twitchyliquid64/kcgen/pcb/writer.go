@@ -36,7 +36,7 @@ func (p *PCB) Write(w io.Writer) error {
 	if p.CreatedBy.Version == "" {
 		sw.StringScalar("0.0.1")
 	} else {
-		sw.StringScalar(p.CreatedBy.Version)
+		sw.StringScalarNoQuotes(p.CreatedBy.Version)
 	}
 	if err := sw.CloseList(false); err != nil {
 		return err
@@ -109,9 +109,12 @@ func (p *PCB) Write(w io.Writer) error {
 	}
 
 	// Net classes
-	for _, nc := range p.NetClasses {
+	for i, nc := range p.NetClasses {
 		if err := nc.write(sw); err != nil {
 			return err
+		}
+		if i < len(p.NetClasses)-1 {
+			sw.Separator()
 		}
 	}
 	if len(p.NetClasses) > 0 {
@@ -131,61 +134,33 @@ func (p *PCB) Write(w io.Writer) error {
 		sw.Separator()
 	}
 
-	// Dimensions
-	for _, d := range p.Dimensions {
+	// Drawings
+	for i, d := range p.Drawings {
 		if err := d.write(sw); err != nil {
 			return err
 		}
-		sw.Newlines(1)
-	}
-	// (Graphical) Text
-	for _, t := range p.Texts {
-		if err := t.write(sw); err != nil {
-			return err
-		}
-	}
-
-	// (Graphical) Lines
-	if len(p.Lines) > 0 {
-		sw.Newlines(1)
-	}
-	for i, l := range p.Lines {
-		if err := l.write(sw); err != nil {
-			return err
-		}
-		if i < len(p.Lines)-1 {
+		if i < len(p.Drawings)-1 {
 			sw.Newlines(1)
 		}
 	}
-	if len(p.Lines) > 0 || len(p.Vias) > 0 {
+	if len(p.Drawings) > 0 && len(p.Segments) > 0 {
 		sw.Separator()
 	}
 
-	// Vias
-	for i, v := range p.Vias {
+	// Tracks & Vias
+	for i, v := range p.Segments {
 		if err := v.write(sw); err != nil {
 			return err
 		}
-		if i < len(p.Vias)-1 {
+		if i < len(p.Segments)-1 {
 			sw.Newlines(1)
 		}
 	}
-	// Tracks
-	if len(p.Tracks) > 0 {
-		sw.Newlines(1)
-	}
-	for i, t := range p.Tracks {
-		if err := t.write(sw); err != nil {
-			return err
-		}
-		if i < len(p.Tracks)-1 {
-			sw.Newlines(1)
-		}
-	}
-	// Zones
-	if len(p.Zones) > 0 {
+	if len(p.Segments) > 0 && len(p.Zones) > 0 {
 		sw.Separator()
 	}
+
+	// Zones
 	for i, z := range p.Zones {
 		if err := z.write(sw); err != nil {
 			return err
@@ -261,6 +236,23 @@ func f(f float64) string {
 	return t
 }
 
+func fPrecise(f float64, precision int) string {
+	t := fmt.Sprintf("%."+fmt.Sprint(precision)+"f", f)
+	if t[len(t)-1] != '0' {
+		return t
+	}
+
+	for i := len(t) - 1; i >= 0; i-- {
+		if t[i] != '0' {
+			if t[i] == '.' {
+				return t[:i]
+			}
+			return t[:i+1]
+		}
+	}
+	return t
+}
+
 // write generates an s-expression describing the point.
 func (p *XY) write(prefix string, sw *swriter.SExpWriter) error {
 	sw.StartList(false)
@@ -279,9 +271,62 @@ func (p *XYZ) write(prefix string, sw *swriter.SExpWriter) error {
 	if p.ZPresent {
 		sw.StringScalar(f(p.Z))
 	}
-	if p.Unlocked {
-		sw.StringScalar("unlocked")
+	return sw.CloseList(false)
+}
+
+// writeDouble generates an s-expression describing the point with double precision.
+func (p *XYZ) writeDouble(prefix string, sw *swriter.SExpWriter) error {
+	sw.StartList(false)
+	sw.StringScalar(prefix)
+	sw.StringScalar(fPrecise(p.X, 16))
+	sw.StringScalar(fPrecise(p.Y, 16))
+	if p.ZPresent {
+		sw.StringScalar(fPrecise(p.Z, 16))
 	}
+	return sw.CloseList(false)
+}
+
+// write generates an s-expression describing the Arc.
+func (a *Arc) write(sw *swriter.SExpWriter) error {
+	sw.StartList(false)
+	sw.StringScalar("gr_arc")
+	if err := a.Start.write("start", sw); err != nil {
+		return err
+	}
+	if err := a.End.write("end", sw); err != nil {
+		return err
+	}
+
+	sw.StartList(false)
+	sw.StringScalar("angle")
+	sw.StringScalar(f(a.Angle))
+	if err := sw.CloseList(false); err != nil {
+		return err
+	}
+
+	sw.StartList(false)
+	sw.StringScalar("layer")
+	sw.StringScalar(a.Layer)
+	if err := sw.CloseList(false); err != nil {
+		return err
+	}
+
+	sw.StartList(false)
+	sw.StringScalar("width")
+	sw.StringScalar(f(a.Width))
+	if err := sw.CloseList(false); err != nil {
+		return err
+	}
+
+	if a.Tstamp != "" {
+		sw.StartList(false)
+		sw.StringScalar("tstamp")
+		sw.StringScalar(a.Tstamp)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+
 	return sw.CloseList(false)
 }
 
@@ -294,6 +339,14 @@ func (l *Line) write(sw *swriter.SExpWriter) error {
 	}
 	if err := l.End.write("end", sw); err != nil {
 		return err
+	}
+	if l.Angle != 0 {
+		sw.StartList(false)
+		sw.StringScalar("angle")
+		sw.StringScalar(f(l.Angle))
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	sw.StartList(false)
@@ -308,6 +361,15 @@ func (l *Line) write(sw *swriter.SExpWriter) error {
 	sw.StringScalar(f(l.Width))
 	if err := sw.CloseList(false); err != nil {
 		return err
+	}
+
+	if l.Tstamp != "" {
+		sw.StartList(false)
+		sw.StringScalar("tstamp")
+		sw.StringScalar(l.Tstamp)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	return sw.CloseList(false)
@@ -331,6 +393,14 @@ func (t *Text) write(sw *swriter.SExpWriter) error {
 	sw.StringScalar(t.Layer)
 	if err := sw.CloseList(false); err != nil {
 		return err
+	}
+	if t.Tstamp != "" {
+		sw.StartList(false)
+		sw.StringScalar("tstamp")
+		sw.StringScalar(t.Tstamp)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	sw.StartList(true)
@@ -360,7 +430,6 @@ func (t *Text) write(sw *swriter.SExpWriter) error {
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
-
 	if err := sw.CloseList(true); err != nil {
 		return err
 	}
@@ -640,6 +709,14 @@ func (l *EditorSetup) write(sw *swriter.SExpWriter) error {
 			return err
 		}
 	}
+	if l.SolderMaskMinWidth > 0 {
+		sw.StartList(true)
+		sw.StringScalar("solder_mask_min_width")
+		sw.StringScalar(f(l.SolderMaskMinWidth))
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
 
 	if len(l.AuxAxisOrigin) > 0 {
 		sw.StartList(true)
@@ -675,7 +752,11 @@ func (l *EditorSetup) write(sw *swriter.SExpWriter) error {
 			sw.StartList(true)
 			sw.StringScalar(pp.name)
 			for _, v := range pp.values {
-				sw.StringScalar(v)
+				if alwaysQuotePlotParams[pp.name] {
+					sw.StringScalarQuotes(v)
+				} else {
+					sw.StringScalar(v)
+				}
 			}
 			if err := sw.CloseList(false); err != nil {
 				return err
@@ -691,6 +772,10 @@ func (l *EditorSetup) write(sw *swriter.SExpWriter) error {
 	}
 	sw.Separator()
 	return nil
+}
+
+var alwaysQuotePlotParams = map[string]bool{
+	"outputdirectory": true,
 }
 
 // write generates an s-expression describing the layer.

@@ -1,7 +1,6 @@
 package pcb
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -124,7 +123,8 @@ type ModArc struct {
 // ModModel describes configuration for rendering a 3d model of the part.
 type ModModel struct {
 	Path   string `json:"path"`
-	At     XYZ    `json:"position"`
+	At     XYZ    `json:"position"` // 4.x versions use this, measured in inches.
+	Offset XYZ    `json:"offset"`   // 5.x versions use this, measured in mm.
 	Scale  XYZ    `json:"scale"`
 	Rotate XYZ    `json:"rotate"`
 }
@@ -145,14 +145,6 @@ func (s PadSurface) String() string {
 	return "????"
 }
 
-// MarshalJSON marshals the enum as a quoted json string.
-func (s PadSurface) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(s.String())
-	buffer.WriteString(`"`)
-	return buffer.Bytes(), nil
-}
-
 type PadShape uint8
 
 func (s PadShape) String() string {
@@ -171,14 +163,6 @@ func (s PadShape) String() string {
 		return "custom"
 	}
 	return "????"
-}
-
-// MarshalJSON marshals the enum as a quoted json string.
-func (s PadShape) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(s.String())
-	buffer.WriteString(`"`)
-	return buffer.Bytes(), nil
 }
 
 // Pad constants
@@ -631,6 +615,13 @@ func parseModModel(n sexp.Helper) (*ModModel, error) {
 			if c.Child(1).MustNode().NumChildren() >= 4 {
 				m.At.Z = c.Child(1).Child(3).MustFloat64()
 				m.At.ZPresent = true
+			}
+		case "offset":
+			m.Offset.X = c.Child(1).Child(1).MustFloat64()
+			m.Offset.Y = c.Child(1).Child(2).MustFloat64()
+			if c.Child(1).MustNode().NumChildren() >= 4 {
+				m.Offset.Z = c.Child(1).Child(3).MustFloat64()
+				m.Offset.ZPresent = true
 			}
 		case "scale":
 			m.Scale.X = c.Child(1).Child(1).MustFloat64()

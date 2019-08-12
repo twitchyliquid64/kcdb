@@ -11,10 +11,12 @@ import (
 
 // Text represents some text to be rendered.
 type Text struct {
-	Text     string `json:"value"`
-	Layer    string `json:"layer"`
-	At       XYZ    `json:"position"`
-	Unlocked bool   `json:"unlocked"`
+	Text   string `json:"value"`
+	Layer  string `json:"layer"`
+	Tstamp string `json:"tstamp"`
+
+	At       XYZ  `json:"position"`
+	Unlocked bool `json:"unlocked"`
 
 	Effects TextEffects `json:"effects"`
 	Hidden  bool        `json:"hidden"`
@@ -63,8 +65,24 @@ type TextEffects struct {
 type Line struct {
 	Start XY      `json:"start"`
 	End   XY      `json:"end"`
-	Layer string  `json:"layer"`
-	Width float64 `json:"width"`
+	Angle float64 `json:"angle"`
+
+	Layer  string  `json:"layer"`
+	Width  float64 `json:"width"`
+	Tstamp string  `json:"tstamp"`
+
+	order int
+}
+
+// Arc represents an arc drawn on a PCB.
+type Arc struct {
+	Start XY      `json:"start"`
+	End   XY      `json:"end"`
+	Angle float64 `json:"angle"`
+
+	Tstamp string  `json:"tstamp"`
+	Layer  string  `json:"layer"`
+	Width  float64 `json:"width"`
 
 	order int
 }
@@ -154,6 +172,8 @@ func parseGRText(n sexp.Helper, ordering int) (Text, error) {
 			t.Hidden = true
 		case "layer":
 			t.Layer = c.Child(1).MustString()
+		case "tstamp":
+			t.Tstamp = c.Child(1).MustString()
 		case "effects":
 			effects, err := parseTextEffects(c)
 			if err != nil {
@@ -224,8 +244,36 @@ func parseGRLine(n sexp.Helper, ordering int) (Line, error) {
 		case "end":
 			l.End.X = c.Child(1).MustFloat64()
 			l.End.Y = c.Child(2).MustFloat64()
+		case "tstamp":
+			l.Tstamp = c.Child(1).MustString()
 		case "width":
 			l.Width = c.Child(1).MustFloat64()
+		case "angle":
+			l.Angle = c.Child(1).MustFloat64()
+		case "layer":
+			l.Layer = c.Child(1).MustString()
+		}
+	}
+	return l, nil
+}
+
+func parseGRArc(n sexp.Helper, ordering int) (Arc, error) {
+	l := Arc{order: ordering}
+	for x := 1; x < n.MustNode().NumChildren(); x++ {
+		c := n.Child(x)
+		switch c.Child(0).MustString() {
+		case "start":
+			l.Start.X = c.Child(1).MustFloat64()
+			l.Start.Y = c.Child(2).MustFloat64()
+		case "end":
+			l.End.X = c.Child(1).MustFloat64()
+			l.End.Y = c.Child(2).MustFloat64()
+		case "tstamp":
+			l.Tstamp = c.Child(1).MustString()
+		case "width":
+			l.Width = c.Child(1).MustFloat64()
+		case "angle":
+			l.Angle = c.Child(1).MustFloat64()
 		case "layer":
 			l.Layer = c.Child(1).MustString()
 		}

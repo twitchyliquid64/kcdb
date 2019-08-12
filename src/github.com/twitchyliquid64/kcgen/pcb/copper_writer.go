@@ -64,11 +64,22 @@ func (z *Zone) write(sw *swriter.SExpWriter) error {
 		return err
 	}
 
-	sw.StartList(false)
-	sw.StringScalar("layer")
-	sw.StringScalar(z.Layer)
-	if err := sw.CloseList(false); err != nil {
-		return err
+	if len(z.Layers) == 1 {
+		sw.StartList(false)
+		sw.StringScalar("layer")
+		sw.StringScalar(z.Layers[0])
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	} else {
+		sw.StartList(false)
+		sw.StringScalar("layers")
+		for _, l := range z.Layers {
+			sw.StringScalar(l)
+		}
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	sw.StartList(false)
@@ -81,7 +92,7 @@ func (z *Zone) write(sw *swriter.SExpWriter) error {
 	sw.StartList(false)
 	sw.StringScalar("hatch")
 	sw.StringScalar(z.Hatch.Mode)
-	sw.StringScalar(f(z.Hatch.Size))
+	sw.StringScalar(f(z.Hatch.Pitch))
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
@@ -108,12 +119,39 @@ func (z *Zone) write(sw *swriter.SExpWriter) error {
 	}
 	sw.Newlines(1)
 
+	if z.IsKeepout {
+		sw.StartList(false)
+		sw.StringScalar("keepout")
+		ke := []struct {
+			name string
+			val  bool
+		}{
+			{"tracks", z.Keepout.TracksAllowed},
+			{"vias", z.Keepout.ViasAllowed},
+			{"copperpour", z.Keepout.CopperPourAllowed},
+		}
+		for _, e := range ke {
+			sw.StartList(false)
+			sw.StringScalar(e.name)
+			if e.val {
+				sw.StringScalar("allowed")
+			} else {
+				sw.StringScalar("not_allowed")
+			}
+			if err := sw.CloseList(false); err != nil {
+				return err
+			}
+		}
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+		sw.Newlines(1)
+	}
+
 	sw.StartList(false)
 	sw.StringScalar("fill")
-	if z.Fill.Enabled {
+	if z.Fill.IsFilled {
 		sw.StringScalar("yes")
-	} else {
-		sw.StringScalar("no")
 	}
 	sw.StartList(false)
 	sw.StringScalar("arc_segments")
@@ -162,9 +200,11 @@ func (z *Zone) write(sw *swriter.SExpWriter) error {
 			return err
 		}
 	}
-	sw.Newlines(1)
+	if len(z.Polys) > 0 {
+		sw.Newlines(1)
+	}
 
-	for _, p := range z.Polys {
+	for i, p := range z.Polys {
 		sw.StartList(false)
 		sw.StringScalar("filled_polygon")
 		sw.Newlines(1)
@@ -186,6 +226,10 @@ func (z *Zone) write(sw *swriter.SExpWriter) error {
 		}
 		if err := sw.CloseList(true); err != nil {
 			return err
+		}
+
+		if i < len(z.Polys)-1 {
+			sw.Newlines(1)
 		}
 	}
 
@@ -222,6 +266,15 @@ func (t *Track) write(sw *swriter.SExpWriter) error {
 	sw.IntScalar(t.NetIndex)
 	if err := sw.CloseList(false); err != nil {
 		return err
+	}
+
+	if t.Tstamp != "" {
+		sw.StartList(false)
+		sw.StringScalar("tstamp")
+		sw.StringScalar(t.Tstamp)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	return sw.CloseList(false)
