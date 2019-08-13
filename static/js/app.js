@@ -1,12 +1,23 @@
 var app = angular.module('kcdb', ['ui.materialize', 'angularMoment']);
 
-app.controller('BodyController', ["$scope", "$rootScope", function ($scope, $rootScope) {
+app.controller('BodyController', ["$scope", "$rootScope", "$location", function ($scope, $rootScope, $location) {
     $scope.page = "search";
 
     $scope.changePage = function(pageName){
         $scope.page = pageName;
+        $location.hash(pageName);
         $rootScope.$broadcast('page-change', {page: pageName});
     };
+
+    switch ($location.hash()) {
+    case 'sources':
+      setTimeout(function(){
+        $scope.$apply(function() {
+          $scope.changePage('sources');
+        });
+      }, 20);
+      break;
+    }
 }]);
 
 app.filter('escape', function() {
