@@ -30,6 +30,8 @@ type Via struct {
 	Layers   []string `json:"layers"`
 	NetIndex int      `json:"net_index"`
 
+	StatusFlags string `json:"status_flags"`
+
 	order int
 }
 
@@ -86,6 +88,8 @@ type Track struct {
 
 	Tstamp string `json:"tstamp"`
 
+	StatusFlags string `json:"status_flags"`
+
 	order int
 }
 
@@ -103,6 +107,8 @@ func parseVia(n sexp.Helper, ordering int) (Via, error) {
 		case "at":
 			v.At.X = c.Child(1).MustFloat64()
 			v.At.Y = c.Child(2).MustFloat64()
+		case "status":
+			v.StatusFlags = c.Child(1).MustString()
 		case "layers":
 			for j := 1; j < c.MustNode().NumChildren(); j++ {
 				v.Layers = append(v.Layers, c.Child(j).MustString())
@@ -232,6 +238,8 @@ func parseSegment(n sexp.Helper, ordering int) (Track, error) {
 			t.Layer = c.Child(1).MustString()
 		case "tstamp":
 			t.Tstamp = c.Child(1).MustString()
+		case "status":
+			t.StatusFlags = c.Child(1).MustString()
 		case "start":
 			t.Start = XY{X: c.Child(1).MustFloat64(), Y: c.Child(2).MustFloat64()}
 		case "end":

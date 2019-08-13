@@ -203,6 +203,7 @@ func parseTextEffects(n sexp.Helper) (TextEffects, error) {
 					default:
 						return TextEffects{}, fmt.Errorf("unhandled scalar in text effects: %v", c.MustNode().Value)
 					}
+					continue
 				}
 
 				switch c.Child(0).MustString() {

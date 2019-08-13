@@ -72,14 +72,25 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
 
     if ($scope.module.graphics) {
       $scope.unsupported = undefined;
+      var lastLine = null;
+      var lastLinePoint = null;
       for (var i = 0; i < $scope.module.graphics.length; i++) {
         var g = $scope.module.graphics[i];
         switch (g.type) {
           case 'fp_line':
             var l = new $scope.paperSurface.Path.Line(g.renderable.start, g.renderable.end);
-            l.strokeColor = l.fillColor = resolveColor('line', g.renderable.layer);
+            l.strokeColor = resolveColor('line', g.renderable.layer);
             l.strokeWidth = g.renderable.width * 15;
+
+            // Join it with the previous line if possible.
+            if (lastLine && lastLinePoint.x == g.renderable.start.x && lastLinePoint.y == g.renderable.start.y) {
+              lastLine.join(l);
+              lastLinePoint = g.renderable.end;
+              break;
+            }
             $scope.componentLayer.addChild(l);
+            lastLine = l;
+            lastLinePoint = g.renderable.end;
             break;
 
           case 'fp_circle':
@@ -107,10 +118,11 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
               fillColor: resolveColor('text', g.renderable.layer),
               fontFamily: 'Lucida Console',
               fontSize: 1,
+              fontWeight: g.renderable.effects.bold ? 'bold' : '',
               justification: 'center',
             });
             pt.translate([0, g.renderable.position.y - pt.position.y]);
-            pt.scale(g.renderable.effects.size.x, g.renderable.effects.size.y);
+            pt.scale(g.renderable.effects.size.x * 0.7, g.renderable.effects.size.y * 0.7);
             tGroup.addChild(pt);
             $scope.componentLayer.addChild(tGroup);
             break;
@@ -128,11 +140,27 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
       for (var i = 0; i < $scope.module.pads.length; i++) {
         var pObj = $scope.module.pads[i];
         var pGroup = new $scope.paperSurface.Group();
+
+        var size = new $scope.paperSurface.Point(pObj.size).divide(2);
+        var clearance = 0.2 / 2;
+        if (pObj.clearance) {
+          clearance = pObj.clearance / 2;
+        }
+        size.x -= clearance;
+        size.y -= clearance;
+
         switch (pObj.shape) {
           case 'rect':
             pGroup.addChild(new $scope.paperSurface.Shape.Rectangle({
               center: pObj.position,
-              size: new $scope.paperSurface.Point(pObj.size).divide(2),
+              size: size,
+            }));
+            break;
+          case 'roundrect':
+            pGroup.addChild(new $scope.paperSurface.Shape.Rectangle({
+              center: pObj.position,
+              size: size,
+              radius: Math.min(pObj.roundrect_rratio * Math.min(size.x, size.y), 0.25),
             }));
             break;
           case 'oval':
@@ -149,10 +177,10 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
         pGroup.strokeColor = pGroup.fillColor = resolveColor('pad', pObj.layers[0]);
 
         // TODO: support other kinds of drill holes.
-        if (pObj.drill && pObj.drill.scalar > 0) {
+        if (pObj.drill_size.x > 0) {
           pGroup.addChild(new $scope.paperSurface.Shape.Circle({
-            center: pObj.position,
-            radius: pObj.drill.scalar/2.0,
+            center: new $scope.paperSurface.Point(pObj.position).add(pObj.drill_offset),
+            radius: pObj.drill_size.x/2,
             fillColor: resolveColor('drill', pObj.layers[0]),
           }));
         }
@@ -162,7 +190,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
           content: '' + pObj.pin,
           fillColor: 'white',
           fontFamily: 'Courier New',
-          fontSize: 2,
+          fontSize: 2 * 0.7,
           justification: 'center',
         });
         pt.translate([0, pObj.position.y - pt.position.y]);

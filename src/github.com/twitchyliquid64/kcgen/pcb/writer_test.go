@@ -79,7 +79,7 @@ func TestPCBWrite(t *testing.T) {
 					&Via{At: XY{X: 10, Y: 32.5}, Layers: []string{"F.Cu", "B.Cu"}, NetIndex: 2},
 				},
 			},
-			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (via (at 100 32.5) (size 0) (drill 0) (layers F.Cu B.Cu) (net 2))\n  (via (at 10 32.5) (size 0) (drill 0) (layers F.Cu B.Cu) (net 2))\n)\n",
+			expected: "(kicad_pcb (version 4) (host kcgen 0.0.1)\n\n  (general)\n\n  (page A4)\n  (layers)\n\n  (setup\n    (zone_45_only no)\n    (uvias_allowed no)\n  )\n\n  (via (at 100 32.5) (size 0) (layers F.Cu B.Cu) (net 2))\n  (via (at 10 32.5) (size 0) (layers F.Cu B.Cu) (net 2))\n)\n",
 		},
 		{
 			name: "tracks",
@@ -168,10 +168,11 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						ZoneConnect: ZoneConnectInherited,
+						Layer:       "F.Cu",
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Placement: ModPlacement{
 							At: XYZ{X: 159.850666, Y: 90},
 						},
@@ -190,16 +191,17 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
-						Model: &ModModel{
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
+						Models: []ModModel{{
 							Path:   "Resistors_SMD.3dshapes/R_0805_HandSoldering.wrl",
 							At:     XYZ{ZPresent: true},
 							Scale:  XYZ{X: 1, Y: 1, Z: 1, ZPresent: true},
 							Rotate: XYZ{ZPresent: true},
-						},
+						}},
 					},
 				},
 			},
@@ -211,10 +213,11 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Graphics: []ModGraphic{
 							{
 								Ident: "fp_text",
@@ -241,10 +244,11 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Graphics: []ModGraphic{
 							{
 								Ident: "fp_line",
@@ -267,10 +271,11 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Graphics: []ModGraphic{
 							{
 								Ident: "fp_circle",
@@ -293,10 +298,11 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Graphics: []ModGraphic{
 							{
 								Ident: "fp_arc",
@@ -320,10 +326,11 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Graphics: []ModGraphic{
 							{
 								Ident: "fp_poly",
@@ -351,20 +358,22 @@ func TestPCBWrite(t *testing.T) {
 				FormatVersion: 4,
 				Modules: []Module{
 					{
-						Name:   "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
-						Layer:  "F.Cu",
-						Tedit:  "5ADA75A0",
-						Tstamp: "5AE3D8AB",
+						Name:        "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm",
+						Layer:       "F.Cu",
+						ZoneConnect: ZoneConnectInherited,
+						Tedit:       "5ADA75A0",
+						Tstamp:      "5AE3D8AB",
 						Pads: []Pad{
 							{
-								Ident:     "1",
-								NetNum:    1,
-								NetName:   "GND",
-								Layers:    []string{"*.Cu", "*.Mask"},
-								Surface:   SurfaceTH,
-								Shape:     ShapeRect,
-								DrillSize: XY{X: 1, Y: 1},
-								Size:      XY{X: 1.7, Y: 1.7},
+								Ident:       "1",
+								NetNum:      1,
+								ZoneConnect: ZoneConnectInherited,
+								NetName:     "GND",
+								Layers:      []string{"*.Cu", "*.Mask"},
+								Surface:     SurfaceTH,
+								Shape:       ShapeRect,
+								DrillSize:   XY{X: 1, Y: 1},
+								Size:        XY{X: 1.7, Y: 1.7},
 							},
 						},
 					},
@@ -414,6 +423,18 @@ func TestDecodeThenSerializeMatches(t *testing.T) {
 		{
 			name:  "fume extractor",
 			fname: "anavi-fume-extractor.kicad_pcb",
+		},
+		{
+			name:  "cseduino",
+			fname: "cseduino-v4.kicad_pcb",
+		},
+		{
+			name:  "sci2c",
+			fname: "sci2c-a7001.kicad_pcb",
+		},
+		{
+			name:  "hp34401a_oled",
+			fname: "hp34401a_oled.kicad_pcb",
 		},
 	}
 

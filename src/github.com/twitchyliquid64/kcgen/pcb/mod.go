@@ -1,6 +1,7 @@
 package pcb
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -19,10 +20,11 @@ type Module struct {
 
 	Layer string `json:"layer"`
 
-	SolderMaskMargin  float64 `json:"solder_mask_margin,omitempty"`
-	SolderPasteMargin float64 `json:"solder_paste_margin,omitempty"`
-	SolderPasteRatio  float64 `json:"solder_paste_ratio,omitempty"`
-	Clearance         float64 `json:"clearance,omitempty"`
+	ZoneConnect       ZoneConnectMode `json:"zone_connect,omitempty"`
+	SolderMaskMargin  float64         `json:"solder_mask_margin,omitempty"`
+	SolderPasteMargin float64         `json:"solder_paste_margin,omitempty"`
+	SolderPasteRatio  float64         `json:"solder_paste_ratio,omitempty"`
+	Clearance         float64         `json:"clearance,omitempty"`
 
 	Tedit  string `json:"tedit"`
 	Tstamp string `json:"tstamp"`
@@ -35,7 +37,7 @@ type Module struct {
 
 	Graphics []ModGraphic `json:"graphics"`
 	Pads     []Pad        `json:"pads"`
-	Model    *ModModel    `json:"model,omitempty"`
+	Models   []ModModel   `json:"models,omitempty"`
 }
 
 // ModPlacement describes the positioning of a module on a PCB.
@@ -50,7 +52,7 @@ type ModGraphic struct {
 }
 
 type modDrawable interface {
-	write(sw *swriter.SExpWriter) error
+	write(sw *swriter.SExpWriter, ident string) error
 }
 
 // ModPolygon represents a polygon drawn in a module.
@@ -145,6 +147,14 @@ func (s PadSurface) String() string {
 	return "????"
 }
 
+// MarshalJSON marshals the enum as a quoted json string.
+func (s PadSurface) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(s.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
 type PadShape uint8
 
 func (s PadShape) String() string {
@@ -163,6 +173,14 @@ func (s PadShape) String() string {
 		return "custom"
 	}
 	return "????"
+}
+
+// MarshalJSON marshals the enum as a quoted json string.
+func (s PadShape) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(s.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
 }
 
 // Pad constants
@@ -200,19 +218,28 @@ type Pad struct {
 	DrillSize   XY       `json:"drill_size"`
 	DrillShape  PadShape `json:"drill_shape"`
 
-	DieLength              float64 `json:"die_length,omitempty"`
-	ZoneConnect            int     `json:"zone_connect,omitempty"`
-	ThermalWidth           float64 `json:"thermal_width,omitempty"`
-	ThermalGap             float64 `json:"thermal_gap,omitempty"`
-	RoundRectRRatio        float64 `json:"roundrect_rratio,omitempty"`
-	ChamferRatio           float64 `json:"chamfer_ratio,omitempty"`
-	SolderMaskMargin       float64 `json:"solder_mask_margin,omitempty"`
-	SolderPasteMargin      float64 `json:"solder_paste_margin,omitempty"`
-	SolderPasteMarginRatio float64 `json:"solder_paste_margin_ratio,omitempty"`
-	Clearance              float64 `json:"clearance,omitempty"`
+	DieLength              float64         `json:"die_length,omitempty"`
+	ZoneConnect            ZoneConnectMode `json:"zone_connect,omitempty"`
+	ThermalWidth           float64         `json:"thermal_width,omitempty"`
+	ThermalGap             float64         `json:"thermal_gap,omitempty"`
+	RoundRectRRatio        float64         `json:"roundrect_rratio,omitempty"`
+	ChamferRatio           float64         `json:"chamfer_ratio,omitempty"`
+	SolderMaskMargin       float64         `json:"solder_mask_margin,omitempty"`
+	SolderPasteMargin      float64         `json:"solder_paste_margin,omitempty"`
+	SolderPasteMarginRatio float64         `json:"solder_paste_margin_ratio,omitempty"`
+	Clearance              float64         `json:"clearance,omitempty"`
 
 	Surface PadSurface `json:"surface"`
 	Shape   PadShape   `json:"shape"`
+
+	Options    *PadOptions
+	Primitives []ModGraphic
+}
+
+// PadOptions describes settings on a custom pad.
+type PadOptions struct {
+	Clearance string `json:"clearance"`
+	Anchor    string `json:"anchor"`
 }
 
 func ParseModule(r io.RuneReader) (*Module, error) {
@@ -225,8 +252,9 @@ func ParseModule(r io.RuneReader) (*Module, error) {
 
 func parseModule(n sexp.Helper, ordering int) (*Module, error) {
 	m := Module{
-		Name:  n.Child(1).MustString(),
-		order: ordering,
+		Name:        n.Child(1).MustString(),
+		ZoneConnect: ZoneConnectInherited,
+		order:       ordering,
 	}
 	for x := 2; x < n.MustNode().NumChildren(); x++ {
 		c := n.Child(x)
@@ -275,6 +303,8 @@ func parseModule(n sexp.Helper, ordering int) (*Module, error) {
 			m.SolderMaskMargin = c.Child(1).MustFloat64()
 		case "solder_paste_ratio":
 			m.SolderPasteRatio = c.Child(1).MustFloat64()
+		case "zone_connect":
+			m.ZoneConnect = ZoneConnectMode(c.Child(1).MustInt())
 
 		case "fp_text":
 			t, err := parseModText(c)
@@ -340,7 +370,7 @@ func parseModule(n sexp.Helper, ordering int) (*Module, error) {
 			if err != nil {
 				return nil, err
 			}
-			m.Model = model
+			m.Models = append(m.Models, *model)
 		}
 	}
 	return &m, nil
@@ -490,7 +520,8 @@ func parseModCircle(n sexp.Helper) (*ModCircle, error) {
 
 func parseModPad(n sexp.Helper) (*Pad, error) {
 	p := Pad{
-		Ident: n.Child(1).MustString(),
+		Ident:       n.Child(1).MustString(),
+		ZoneConnect: ZoneConnectInherited,
 	}
 
 	switch n.Child(2).MustString() {
@@ -581,7 +612,7 @@ func parseModPad(n sexp.Helper) (*Pad, error) {
 		case "solder_paste_margin_ratio":
 			p.SolderPasteMarginRatio = c.Child(1).MustFloat64()
 		case "zone_connect":
-			p.ZoneConnect = c.Child(1).MustInt()
+			p.ZoneConnect = ZoneConnectMode(c.Child(1).MustInt())
 		case "thermal_width":
 			p.ThermalWidth = c.Child(1).MustFloat64()
 		case "thermal_gap":
@@ -594,11 +625,75 @@ func parseModPad(n sexp.Helper) (*Pad, error) {
 				p.Shape = ShapeChamferedRect
 			}
 
-			// TODO: chamfer, options, primitives
+		case "options":
+			o, err := parsePadOptions(c)
+			if err != nil {
+				return nil, err
+			}
+			p.Options = o
+
+		case "primitives":
+			for y := 1; y < c.MustNode().NumChildren(); y++ {
+				c2 := c.Child(y)
+				switch c2.Child(0).MustString() {
+				case "gr_poly":
+					a, err := parseModPolygon(c2)
+					if err != nil {
+						return nil, err
+					}
+					p.Primitives = append(p.Primitives, ModGraphic{
+						Ident:      c2.Child(0).MustString(),
+						Renderable: a,
+					})
+				case "gr_line":
+					l, err := parseModLine(c2)
+					if err != nil {
+						return nil, err
+					}
+					p.Primitives = append(p.Primitives, ModGraphic{
+						Ident:      c2.Child(0).MustString(),
+						Renderable: l,
+					})
+				case "gr_arc":
+					a, err := parseModArc(c2)
+					if err != nil {
+						return nil, err
+					}
+					p.Primitives = append(p.Primitives, ModGraphic{
+						Ident:      c2.Child(0).MustString(),
+						Renderable: a,
+					})
+				case "gr_circle":
+					c, err := parseModCircle(c2)
+					if err != nil {
+						return nil, err
+					}
+					p.Primitives = append(p.Primitives, ModGraphic{
+						Ident:      c2.Child(0).MustString(),
+						Renderable: c,
+					})
+				}
+			}
+
+			// TODO: chamfer
 		}
 	}
 
 	return &p, nil
+}
+
+func parsePadOptions(n sexp.Helper) (*PadOptions, error) {
+	o := PadOptions{}
+	for x := 1; x < n.MustNode().NumChildren(); x++ {
+		c := n.Child(x)
+		switch c.Child(0).MustString() {
+		case "clearance":
+			o.Clearance = c.Child(1).MustString()
+		case "anchor":
+			o.Anchor = c.Child(1).MustString()
+		}
+	}
+	return &o, nil
 }
 
 func parseModModel(n sexp.Helper) (*ModModel, error) {

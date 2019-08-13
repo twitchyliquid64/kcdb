@@ -19,11 +19,13 @@ func (v *Via) write(sw *swriter.SExpWriter) error {
 		return err
 	}
 
-	sw.StartList(false)
-	sw.StringScalar("drill")
-	sw.StringScalar(f(v.Drill))
-	if err := sw.CloseList(false); err != nil {
-		return err
+	if v.Drill != 0 {
+		sw.StartList(false)
+		sw.StringScalar("drill")
+		sw.StringScalar(f(v.Drill))
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	sw.StartList(false)
@@ -40,6 +42,15 @@ func (v *Via) write(sw *swriter.SExpWriter) error {
 	sw.IntScalar(v.NetIndex)
 	if err := sw.CloseList(false); err != nil {
 		return err
+	}
+
+	if v.StatusFlags != "" {
+		sw.StartList(false)
+		sw.StringScalar("status")
+		sw.StringScalar(v.StatusFlags)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
 	}
 
 	return sw.CloseList(false)
@@ -272,6 +283,15 @@ func (t *Track) write(sw *swriter.SExpWriter) error {
 		sw.StartList(false)
 		sw.StringScalar("tstamp")
 		sw.StringScalar(t.Tstamp)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+
+	if t.StatusFlags != "" {
+		sw.StartList(false)
+		sw.StringScalar("status")
+		sw.StringScalar(t.StatusFlags)
 		if err := sw.CloseList(false); err != nil {
 			return err
 		}

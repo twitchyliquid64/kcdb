@@ -13,7 +13,7 @@ var (
 	alphaLower         = "abcdefghijklmnopqrstuvwxyz"
 	alphaUpper         = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	num                = "0123456789"
-	special            = "._+-/:*%${},|<"
+	special            = "._+-/:*%${},|<~"
 	allowedStringChars = alphaLower + alphaUpper + num + special
 )
 

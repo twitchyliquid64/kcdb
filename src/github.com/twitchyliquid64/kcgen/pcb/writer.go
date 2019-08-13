@@ -36,7 +36,7 @@ func (p *PCB) Write(w io.Writer) error {
 	if p.CreatedBy.Version == "" {
 		sw.StringScalar("0.0.1")
 	} else {
-		sw.StringScalarNoQuotes(p.CreatedBy.Version)
+		sw.StringScalar(p.CreatedBy.Version)
 	}
 	if err := sw.CloseList(false); err != nil {
 		return err
@@ -74,6 +74,13 @@ func (p *PCB) Write(w io.Writer) error {
 		return err
 	}
 	sw.Newlines(1)
+
+	if p.TitleInfo != nil {
+		if err := p.TitleInfo.write(sw); err != nil {
+			return err
+		}
+		sw.Separator()
+	}
 
 	// Layers
 	sw.StartList(false)
@@ -216,6 +223,9 @@ func (l *Layer) write(sw *swriter.SExpWriter) error {
 	sw.IntScalar(l.Num)
 	sw.StringScalar(l.Name)
 	sw.StringScalar(l.Type)
+	if l.Hidden {
+		sw.StringScalar("hide")
+	}
 	return sw.CloseList(false)
 }
 
@@ -416,6 +426,14 @@ func (t *Text) write(sw *swriter.SExpWriter) error {
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
+
+	if t.Effects.Bold {
+		sw.StringScalar("bold")
+	}
+	if t.Effects.Italic {
+		sw.StringScalar("italic")
+	}
+
 	if err := sw.CloseList(false); err != nil {
 		return err
 	}
@@ -594,6 +612,26 @@ func (l *EditorSetup) write(sw *swriter.SExpWriter) error {
 			return err
 		}
 	}
+
+	if l.UserVia[0] > 0 || l.UserVia[1] > 0 {
+		sw.StartList(true)
+		sw.StringScalar("user_via")
+		sw.StringScalar(f(l.UserVia[0]))
+		sw.StringScalar(f(l.UserVia[1]))
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+
+	if l.BlindBuriedViasAllowed {
+		sw.StartList(true)
+		sw.StringScalar("blind_buried_vias_allowed")
+		sw.StringScalar("yes")
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+
 	if l.UViaSize > 0 {
 		sw.StartList(true)
 		sw.StringScalar("uvia_size")
@@ -728,6 +766,15 @@ func (l *EditorSetup) write(sw *swriter.SExpWriter) error {
 			return err
 		}
 	}
+	if l.GridOrigin[0] != 0 || l.GridOrigin[1] != 0 {
+		sw.StartList(true)
+		sw.StringScalar("grid_origin")
+		sw.IntScalar(l.GridOrigin[0])
+		sw.IntScalar(l.GridOrigin[1])
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
 	if l.VisibleElements != "" {
 		sw.StartList(true)
 		sw.StringScalar("visible_elements")
@@ -834,6 +881,23 @@ func (c *NetClass) write(sw *swriter.SExpWriter) error {
 		}
 	}
 
+	if c.DiffPairWidth > 0 {
+		sw.StartList(true)
+		sw.StringScalar("diff_pair_width")
+		sw.StringScalar(f(c.DiffPairWidth))
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+	if c.DiffPairGap > 0 {
+		sw.StartList(true)
+		sw.StringScalar("diff_pair_gap")
+		sw.StringScalar(f(c.DiffPairGap))
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+
 	for _, net := range c.Nets {
 		sw.StartList(true)
 		sw.StringScalar("add_net")
@@ -842,6 +906,61 @@ func (c *NetClass) write(sw *swriter.SExpWriter) error {
 			return err
 		}
 	}
+	if err := sw.CloseList(true); err != nil {
+		return err
+	}
+	return nil
+}
+
+// write generates an s-expression describing the title block.
+func (t *TitleInfo) write(sw *swriter.SExpWriter) error {
+	sw.StartList(false)
+	sw.StringScalar("title_block")
+
+	if t.Title != "" {
+		sw.StartList(true)
+		sw.StringScalar("title")
+		sw.StringScalar(t.Title)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+	if t.Date != "" {
+		sw.StartList(true)
+		sw.StringScalar("date")
+		sw.StringScalar(t.Date)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+	if t.Revision != "" {
+		sw.StartList(true)
+		sw.StringScalar("rev")
+		sw.StringScalar(t.Revision)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+	if t.Company != "" {
+		sw.StartList(true)
+		sw.StringScalar("company")
+		sw.StringScalar(t.Company)
+		if err := sw.CloseList(false); err != nil {
+			return err
+		}
+	}
+	for i, c := range t.Comments {
+		if c != "" {
+			sw.StartList(true)
+			sw.StringScalar("comment")
+			sw.IntScalar(i + 1)
+			sw.StringScalar(c)
+			if err := sw.CloseList(false); err != nil {
+				return err
+			}
+		}
+	}
+
 	if err := sw.CloseList(true); err != nil {
 		return err
 	}
