@@ -79,6 +79,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
         switch (g.type) {
           case 'fp_line':
             var l = new $scope.paperSurface.Path.Line(g.renderable.start, g.renderable.end);
+            l.strokeCap = 'round';
             l.strokeColor = resolveColor('line', g.renderable.layer);
             l.strokeWidth = g.renderable.width * 15;
 
@@ -167,7 +168,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
           case 'circle':
             pGroup.addChild(new $scope.paperSurface.Shape.Ellipse({
               center: pObj.position,
-              size: new $scope.paperSurface.Point(pObj.size).divide(2),
+              size: size,
             }));
             break;
         }
