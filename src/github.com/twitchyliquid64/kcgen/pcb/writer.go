@@ -8,7 +8,7 @@ import (
 	"github.com/twitchyliquid64/kcgen/swriter"
 )
 
-// Write produces the file on disk. IMPLEMENTATION IS NOT YET COMPLETE.
+// Write produces the file on disk.
 func (p *PCB) Write(w io.Writer) error {
 	sw, err := swriter.NewSExpWriter(w)
 	if err != nil {

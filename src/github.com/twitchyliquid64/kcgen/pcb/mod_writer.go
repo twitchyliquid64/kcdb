@@ -1,10 +1,21 @@
 package pcb
 
 import (
+	"io"
 	"strings"
 
 	"github.com/twitchyliquid64/kcgen/swriter"
 )
+
+// WriteModule writes a serialized (kicad_mod format) representation to the
+// writer provided.
+func (m *Module) WriteModule(w io.Writer) error {
+	sw, err := swriter.NewSExpWriter(w)
+	if err != nil {
+		return err
+	}
+	return m.write(sw, false)
+}
 
 func (m *Module) write(sw *swriter.SExpWriter, doPlacement bool) error {
 	sw.StartList(false)
