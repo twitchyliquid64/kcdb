@@ -151,7 +151,7 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
     size.x -= clearance;
     size.y -= clearance;
 
-    renderPadShape(pObj, pGroup, pObj.position, size, pObj.shape);
+    renderPadShape(pObj, pGroup, pObj.position, size, pObj.shape, clearance);
     pGroup.strokeColor = pGroup.fillColor = resolveColor('pad', pObj.layers[0]);
 
     // TODO: support other kinds of drill holes.
@@ -178,43 +178,51 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
     }
   }
 
-  function renderPadShape(pObj, pGroup, pos, size, shape) {
+  function renderPadShape(pObj, pGroup, pos, size, shape, clearance) {
     switch (shape) {
       case 'custom':
-      // TODO: Work out issues with scaling the sizes.
-      // switch (pObj.Options.anchor) {
-      //   case 'rect':
-      //     var r = new $scope.paperSurface.Shape.Rectangle(
-      //       new $scope.paperSurface.Point(-size.x/2, -size.y/2),
-      //       new $scope.paperSurface.Point(size.x/2, size.y/2),
-      //     );
-      //     r.translate(pObj.position);
-      //     pGroup.addChild(r);
-      //     break;
-      // }
+        // TODO: Work out issues with scaling the sizes.
+        // switch (pObj.Options.anchor) {
+        //   case 'rect':
+        //     var r = new $scope.paperSurface.Shape.Rectangle(
+        //       new $scope.paperSurface.Point(-size.x/2, -size.y/2),
+        //       new $scope.paperSurface.Point(size.x/2, size.y/2),
+        //     );
+        //     r.translate(pObj.position);
+        //     pGroup.addChild(r);
+        //     break;
+        // }
 
+        var padPath = new $scope.paperSurface.Path();
         for (var i = 0; i < pObj.Primitives.length; i++) {
           var prim = pObj.Primitives[i];
           switch (prim.type) {
             case 'gr_poly':
               var p = new $scope.paperSurface.Path(prim.renderable.points);
-              p.translate(new $scope.paperSurface.Point(pos));
               p.strokeWidth = prim.renderable.width * 5;
-              pGroup.addChild(p);
+              p.scale((p.bounds.width-clearance) / p.bounds.width, (p.bounds.height-clearance) / p.bounds.height);
+              padPath = padPath.unite(p, {insert: false});
               break;
 
             case 'gr_circle':
-              var c = new $scope.paperSurface.Shape.Circle({
+              var c = new $scope.paperSurface.Path.Circle({
                 center: new $scope.paperSurface.Point(prim.renderable.center),
                 radius: new $scope.paperSurface.Point(prim.renderable.center).getDistance(prim.renderable.end),
               });
-              c.translate(pos);
               c.strokeWidth = prim.renderable.width * 5;
-              pGroup.addChild(c);
+              c.scale((c.bounds.width-clearance) / c.bounds.width, (c.bounds.height-clearance) / c.bounds.height);
+              padPath = padPath.unite(c, {insert: false});
               break;
           }
         }
+        padPath.translate(new $scope.paperSurface.Point(pos));
+        padPath.flatten(0.006);
+        var hull = convexhull.makeHull(padPath.segments.map(function(s){return s.point}));
+        padPath = new $scope.paperSurface.Path(hull);
+        padPath.closed = true;
+        pGroup.addChild(padPath);
         break;
+
       case 'rect':
         pGroup.addChild(new $scope.paperSurface.Shape.Rectangle({
           center: pObj.position,
