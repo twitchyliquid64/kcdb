@@ -99,11 +99,9 @@ app.controller('ViewController', ["$scope", "$rootScope", "$http", "$window", fu
             break;
 
           case 'fp_arc':
-            var startAngle = new $scope.paperSurface.Point(g.renderable.start).getAngle(g.renderable.end);
-
             var pts = [new $scope.paperSurface.Point(g.renderable.end)];
             for (var j = 0; j < 180; j++) {
-              pts.push(new $scope.paperSurface.Point(g.renderable.end).rotate((g.renderable.angle*j/180.0) - startAngle, g.renderable.start));
+              pts.push(new $scope.paperSurface.Point(g.renderable.end).rotate(g.renderable.angle * j / 180.0, g.renderable.start));
             }
             var p = new $scope.paperSurface.Path(pts);
             p.strokeColor = resolveColor('circle', g.renderable.layer);
