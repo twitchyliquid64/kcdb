@@ -60,14 +60,14 @@ func doIngest() error {
 			fmt.Printf("[ingest][walk] Could not read %q: %v\n", path, err)
 			return err
 		}
-		if strings.HasSuffix(path, ".kicad_mod") {
+		if strings.HasSuffix(path, ".kicad_mod") && !strings.Contains(path, "/.git/") {
 			b, err := ioutil.ReadFile(path)
 			if err != nil {
 				return err
 			}
 			url := db.MakePartURL(current.URL, path[len(tmpDir)+1:])
 
-			//fmt.Printf("File: %+v\n", path)
+			// fmt.Printf("File: %+v\n", path)
 			mod, err := pcb.ParseModule(strings.NewReader(string(b)))
 			if err != nil {
 				fmt.Printf("[ingest][footprint] Failed parsing %q: %v\n", path, err)
